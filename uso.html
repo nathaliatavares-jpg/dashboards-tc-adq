@@ -82,8 +82,16 @@ canvas{max-height:280px;}
 <h2>💡 Insights — o que os dados revelam</h2>
 <div class="insight-grid" id="insightBox"></div>
 
+<!-- Section 0: Total por safra -->
+<h2>📊 Total por Safra de Conversão — Breakdown de Timing</h2>
+<div class="card" style="margin-bottom:16px;">
+  <div class="chart-title">Agregado de todos os placements · cada linha = 1 safra encendida (mais recente primeiro)</div>
+  <div id="safraTimingBars"></div>
+  <div class="timing-legend" id="safraTimingLegend" style="margin-top:10px;"></div>
+</div>
+
 <!-- Section 1: Ranking snapshot + timing breakdown -->
-<h2>📋 Snapshot — Últimas 3 safras por placement</h2>
+<h2>📋 Snapshot por Placement — Últimas 3 safras</h2>
 <div class="grid-main">
   <div class="card">
     <div class="chart-title">% de uso por placement — ranking das últimas 3 safras (mais recente primeiro)</div>
@@ -249,11 +257,59 @@ function populateSafraSel(){
 function rebuildAll(){
   populateSafraSel();
   buildInsights();
+  buildSafraTimingBars();
   buildRankTable();
   buildTimingBars();
   buildTrendChart();
   buildVolChart();
   buildCompareChart();
+}
+
+// ===== SAFRA TIMING BARS (total agregado por safra) =====
+function buildSafraTimingBars(){
+  var D = getData();
+  var TKEYS = ['Same_Day','10D','30D','60D','60D_','Sem_Uso'];
+
+  var rows = SAFRAS.map(function(s, idx){
+    var tTotals = {}; var grandTotal = 0;
+    TKEYS.forEach(function(k){ tTotals[k] = 0; });
+
+    PLS.forEach(function(pl){
+      var d = D[pl]; if(!d||!d.vol||!d.ts) return;
+      var vol = d.vol[idx]; if(!vol) return;
+      TKEYS.forEach(function(k){
+        var pct = d.ts[k] ? d.ts[k][idx] : null;
+        if(pct === null || pct === undefined) return;
+        tTotals[k] += vol * pct / 100;
+        grandTotal  += vol * pct / 100;
+      });
+    });
+
+    if(grandTotal < 0.1) return null;
+
+    var tPcts = {};
+    TKEYS.forEach(function(k){ tPcts[k] = Math.round(tTotals[k]/grandTotal*1000)/10; });
+
+    return {s:s, t:tPcts, total:Math.round(grandTotal)};
+  }).filter(Boolean).reverse(); // newest first
+
+  var container = document.getElementById('safraTimingBars');
+  container.innerHTML = rows.map(function(r){
+    var label = r.s.substring(4)+'/'+r.s.substring(0,4);
+    var segs = TKEYS.map(function(k){
+      var pct = r.t[k]||0;
+      return '<div class="timing-seg" title="'+TIMING_LABELS[k]+': '+pct+'%" style="width:'+pct+'%;background:'+TIMING_COLORS[k]+';"></div>';
+    }).join('');
+    return '<div class="timing-row">'
+      +'<span class="timing-name" style="min-width:60px;font-weight:600;color:var(--accent2);">'+label+'</span>'
+      +'<div class="timing-bar">'+segs+'</div>'
+      +'<span style="font-size:10px;color:var(--muted);margin-left:8px;white-space:nowrap;">'+r.total+'k</span>'
+      +'</div>';
+  }).join('');
+
+  document.getElementById('safraTimingLegend').innerHTML = TKEYS.map(function(k){
+    return '<div class="timing-legend-item"><div class="timing-legend-dot" style="background:'+TIMING_COLORS[k]+';"></div><span>'+TIMING_LABELS[k]+'</span></div>';
+  }).join('');
 }
 
 // ===== HELPERS =====
