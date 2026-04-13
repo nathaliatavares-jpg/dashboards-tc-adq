@@ -85,7 +85,10 @@ canvas{max-height:280px;}
 <!-- Section 0: Total por safra -->
 <h2>📊 Total por Safra de Conversão — Breakdown de Timing</h2>
 <div class="card" style="margin-bottom:16px;">
-  <div class="chart-title">Agregado de todos os placements · cada linha = 1 safra encendida (mais recente primeiro)</div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <div class="chart-title" style="margin-bottom:0;">Agregado de todos os placements · cada linha = 1 safra encendida</div>
+    <div style="display:flex;gap:5px;margin-left:auto;" id="yearPills"></div>
+  </div>
   <div id="safraTimingBars"></div>
   <div class="timing-legend" id="safraTimingLegend" style="margin-top:10px;"></div>
 </div>
@@ -162,6 +165,7 @@ var curTC = 'full';
 var curTiming = 'all';
 var curTimingSafra = 'last3'; // 'last3' or a safra string like '202601'
 var curTrendTiming = 'all';  // timing filter for the trend chart
+var activeSafraYears = new Set(['2024','2025','2026']);
 function getData(){ return curTC === 'full' ? D_FULL : D_MICRO; }
 
 var TIMING_COLORS = {
@@ -270,7 +274,21 @@ function buildSafraTimingBars(){
   var D = getData();
   var TKEYS = ['Same_Day','10D','30D','60D','60D_','Sem_Uso'];
 
+  // Detect available years from SAFRAS
+  var years = [];
+  SAFRAS.forEach(function(s){ var y=s.substring(0,4); if(years.indexOf(y)<0) years.push(y); });
+
+  // Render year pills
+  var pillBox = document.getElementById('yearPills');
+  pillBox.innerHTML = years.map(function(y){
+    var active = activeSafraYears.has(y);
+    return '<button class="pl-pill'+(active?' active':'')+'" '
+      +'style="border-color:#f5c518;'+(active?'color:#000;background:#f5c518;':'color:#f5c518;')+'"'
+      +' onclick="toggleSafraYear(\''+y+'\',this)">'+y+'</button>';
+  }).join('');
+
   var rows = SAFRAS.map(function(s, idx){
+    if(!activeSafraYears.has(s.substring(0,4))) return null;
     var tTotals = {}; var grandTotal = 0;
     TKEYS.forEach(function(k){ tTotals[k] = 0; });
 
@@ -289,7 +307,6 @@ function buildSafraTimingBars(){
 
     var tPcts = {};
     TKEYS.forEach(function(k){ tPcts[k] = Math.round(tTotals[k]/grandTotal*1000)/10; });
-
     return {s:s, t:tPcts, total:Math.round(grandTotal)};
   }).filter(Boolean).reverse(); // newest first
 
@@ -310,6 +327,20 @@ function buildSafraTimingBars(){
   document.getElementById('safraTimingLegend').innerHTML = TKEYS.map(function(k){
     return '<div class="timing-legend-item"><div class="timing-legend-dot" style="background:'+TIMING_COLORS[k]+';"></div><span>'+TIMING_LABELS[k]+'</span></div>';
   }).join('');
+}
+
+function toggleSafraYear(y, el){
+  if(activeSafraYears.has(y)){
+    if(activeSafraYears.size === 1) return; // pelo menos 1 ano sempre ativo
+    activeSafraYears.delete(y);
+    el.classList.remove('active');
+    el.style.color = '#f5c518'; el.style.background = 'transparent';
+  } else {
+    activeSafraYears.add(y);
+    el.classList.add('active');
+    el.style.color = '#000'; el.style.background = '#f5c518';
+  }
+  buildSafraTimingBars();
 }
 
 // ===== HELPERS =====
