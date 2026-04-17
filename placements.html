@@ -210,8 +210,17 @@ tbody td:first-child{text-align:left;font-weight:500;color:var(--accent2);}
   </div>
 </div>
 
-<!-- ===== SEÇÃO 2: SEGMENTAÇÃO POR NISE ===== -->
-<h2>② Segmentação por NISE · Tipo de TC</h2>
+<!-- ===== COMPOSIÇÃO POR MÊS ===== -->
+<h2>② Composição por Mês — todos os placements</h2>
+<div class="card" style="margin-bottom:20px">
+  <div style="overflow-x:auto">
+    <div id="stackedChart" style="min-width:600px;"></div>
+  </div>
+  <div id="stackedLegend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;"></div>
+</div>
+
+<!-- ===== SEÇÃO 3: SEGMENTAÇÃO POR NISE ===== -->
+<h2>③ Segmentação por NISE · Tipo de TC</h2>
 
 <!-- FILTRO GLOBAL TC -->
 <div id="tcFilterBar" style="background:#12151f;border:1.5px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
@@ -703,6 +712,58 @@ function rebuildVolGrupo() {
   });
 }
 rebuildVolGrupo();
+
+// =================== COMPOSIÇÃO POR MÊS ===================
+(function(){
+  var keys = Object.keys(PIVOT);
+  var maxTotal = Math.max.apply(null, TOTAL_MES);
+  var container = document.getElementById('stackedChart');
+  var legend = document.getElementById('stackedLegend');
+  if (!container) return;
+
+  var reversed = MESES_LABEL.slice().reverse();
+  reversed.forEach(function(lbl, ri) {
+    var mesIdx = MESES_LABEL.length - 1 - ri;
+    var total = TOTAL_MES[mesIdx] || 0;
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:5px;';
+
+    var labelEl = document.createElement('div');
+    labelEl.style.cssText = 'font-size:10px;color:#8890a4;width:48px;flex-shrink:0;text-align:right;white-space:nowrap;';
+    labelEl.textContent = lbl;
+
+    var barWrap = document.createElement('div');
+    barWrap.style.cssText = 'height:22px;display:flex;border-radius:3px;overflow:hidden;flex-shrink:0;';
+    barWrap.style.width = Math.max(total / maxTotal * 100, 1).toFixed(1) + '%';
+
+    keys.forEach(function(pl, i) {
+      var v = (PIVOT[pl] || [])[mesIdx] || 0;
+      if (v <= 0 || total <= 0) return;
+      var seg = document.createElement('div');
+      seg.style.cssText = 'height:22px;';
+      seg.style.width = (v / total * 100).toFixed(2) + '%';
+      seg.style.background = COLORS[i % COLORS.length];
+      seg.title = pl + ': ' + fmt(v);
+      barWrap.appendChild(seg);
+    });
+
+    var totEl = document.createElement('div');
+    totEl.style.cssText = 'font-size:10px;color:#8890a4;width:48px;flex-shrink:0;';
+    var t = total >= 1000 ? (total/1000).toFixed(1)+'k' : fmt(total);
+    totEl.textContent = t;
+
+    row.appendChild(labelEl);
+    row.appendChild(barWrap);
+    row.appendChild(totEl);
+    container.appendChild(row);
+  });
+
+  legend.innerHTML = keys.map(function(pl, i) {
+    return '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#8890a4;">' +
+      '<div style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:' + COLORS[i % COLORS.length] + '"></div>' + pl + '</div>';
+  }).join('');
+})();
 
 // TC type (estático — mostra distribuição fixa por NISE em cada TC)
 new Chart(document.getElementById('chartTC'),{
