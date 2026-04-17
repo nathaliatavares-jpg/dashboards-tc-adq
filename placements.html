@@ -1,0 +1,1741 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Placements TC ADQ — MLB</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0f1117;--card:#1a1d2e;--border:#2a2d3e;--accent:#f5c518;--accent2:#00c6ff;--text:#e8eaf0;--muted:#8890a4;--green:#00e676;--red:#ff5252;--orange:#ffab40;--purple:#e040fb;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;padding:24px;}
+h1{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:4px;}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:24px;}
+h2{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:28px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--accent);}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px;}
+.grid-3b{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.grid-3w{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.kpi-value{font-size:28px;font-weight:700;color:var(--text);}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+.kpi-up{color:var(--green);}
+.kpi-down{color:var(--red);}
+.chart-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;}
+canvas{max-height:300px;}
+.table-wrap{overflow-x:auto;max-height:360px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead th{background:#12151f;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.8px;padding:9px 10px;text-align:right;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;}
+thead th:first-child{text-align:left;}
+tbody tr:hover{background:rgba(255,255,255,.03);}
+tbody td{padding:8px 10px;text-align:right;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);}
+tbody td:first-child{text-align:left;font-weight:500;color:var(--accent2);}
+.badge{display:inline-block;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:700;}
+.badge-up{background:rgba(0,230,118,.15);color:var(--green);}
+.badge-down{background:rgba(255,82,82,.15);color:var(--red);}
+.badge-new{background:rgba(245,197,24,.15);color:var(--accent);}
+.badge-dead{background:rgba(136,144,164,.15);color:var(--muted);}
+.insight-list{list-style:none;}
+.insight-list li{padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px;line-height:1.5;display:flex;gap:8px;}
+.insight-list li:last-child{border-bottom:none;}
+.icon{font-size:15px;flex-shrink:0;}
+.tag{font-size:10px;font-weight:700;letter-spacing:.8px;padding:1px 6px;border-radius:4px;margin-right:4px;display:inline-block;}
+.tag-alert{background:rgba(255,82,82,.2);color:var(--red);}
+.tag-ok{background:rgba(0,230,118,.2);color:var(--green);}
+.tag-new{background:rgba(245,197,24,.2);color:var(--accent);}
+.tag-watch{background:rgba(255,171,64,.2);color:var(--orange);}
+.tag-info{background:rgba(0,198,255,.2);color:var(--accent2);}
+.pill-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.pill{padding:4px 11px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--muted);transition:.15s;}
+.pill.active{font-weight:700;}
+.seg-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.seg-tab{padding:5px 14px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.15s;}
+.seg-tab.active{font-weight:700;}
+.seg-tab.t-todos.active{background:rgba(245,197,24,.15);border-color:var(--accent);color:var(--accent);}
+.seg-tab.t-baixo.active{background:rgba(0,230,118,.15);border-color:var(--green);color:var(--green);}
+.seg-tab.t-medio.active{background:rgba(245,197,24,.15);border-color:var(--accent);color:var(--accent);}
+.seg-tab.t-alto.active{background:rgba(0,198,255,.15);border-color:var(--accent2);color:var(--accent2);}
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.divider{height:1px;background:var(--border);margin:24px 0;}
+.tc-btn{padding:6px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:.15s;letter-spacing:.3px;}
+.tc-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.tc-btn.active{background:rgba(0,198,255,.15);border-color:var(--accent2);color:var(--accent2);}
+.seg-tab.t-bronze.active{background:rgba(205,127,50,.15);border-color:#cd7f32;color:#cd7f32;}
+.seg-tab.t-silver.active{background:rgba(192,192,192,.15);border-color:#c0c0c0;color:#c0c0c0;}
+.seg-tab.t-gold.active{background:rgba(245,197,24,.15);border-color:var(--accent);color:var(--accent);}
+.seg-tab.t-platinum.active{background:rgba(0,198,255,.15);border-color:var(--accent2);color:var(--accent2);}
+</style>
+</head>
+<body>
+
+<h1>📊 Dashboard Placements TC ADQ — MLB</h1>
+<p class="subtitle" id="dashSubtitle">Jan/2025 → Mar/2026 &nbsp;·&nbsp; Visão geral + segmentação por faixa de limite</p>
+
+<!-- ===== MARÇO EM FOCO ===== -->
+<div style="background:linear-gradient(135deg,#1a1d2e 0%,#0d2137 100%);border:1.5px solid #00c6ff;border-radius:14px;padding:22px 24px;margin-bottom:24px;">
+  <div id="focusTitle" style="font-size:11px;font-weight:700;color:#00c6ff;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;">⚡ Mês em Foco — Atualização mais recente</div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px;">
+    <div>
+      <div class="kpi-label" id="focusTotalLabel">Total do mês</div>
+      <div class="kpi-value" id="focusTotalVal" style="font-size:26px">—</div>
+      <div class="kpi-sub" id="focusTotalSub">—</div>
+    </div>
+    <div>
+      <div class="kpi-label">🚀 Maior crescimento</div>
+      <div class="kpi-value" id="focusBestName" style="font-size:20px;color:var(--green)">—</div>
+      <div class="kpi-sub" id="focusBestSub">—</div>
+    </div>
+    <div>
+      <div class="kpi-label" id="focusLeaderLabel">🌟 Líder do mês</div>
+      <div class="kpi-value" id="focusLeaderName" style="font-size:20px;color:var(--accent)">—</div>
+      <div class="kpi-sub" id="focusLeaderSub">—</div>
+    </div>
+    <div>
+      <div class="kpi-label">📈 2º maior volume</div>
+      <div class="kpi-value" id="focus2ndName" style="font-size:20px;color:var(--green)">—</div>
+      <div class="kpi-sub" id="focus2ndSub">—</div>
+    </div>
+    <div>
+      <div class="kpi-label">📉 Maior queda</div>
+      <div class="kpi-value" id="focusWorstName" style="font-size:20px;color:var(--red)">—</div>
+      <div class="kpi-sub" id="focusWorstSub">—</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+    <div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">
+      <span style="font-weight:700;color:var(--green)">✅ Crescem em março</span><br>
+      · EA +44% — ritmo consistente desde dez/25<br>
+      · PUSH_ML_ENCENDIDO_D1 +101% — recorde histórico<br>
+      · HOME_MINICARD_RESTYLING +23% — recuperação pós-dez<br>
+      · One Page +12% · PUSH genérico +24%
+    </div>
+    <div style="background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">
+      <span style="font-weight:700;color:var(--red)">⚠️ Atenção em março</span><br>
+      · CHO - Checkout ML -15% — não recuperou do dez<br>
+      · VIP -14% — 2º mês de queda<br>
+      · MP_HOME_ANITTA: zerou — campanha encerrada<br>
+      · QA_NBT_TEST: sumiu — confirme se era real
+    </div>
+    <div style="background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">
+      <span style="font-weight:700;color:var(--accent)">👀 Monitorar</span><br>
+      · Bottom Sheet estável — 0% MoM · sinal de teto?<br>
+      · BANNER_DASHBOARD: -99% desde jun/25 — morto<br>
+      · HOME_MINICARD legado: 203 usuários — morto<br>
+      · DRAWER_ML: 202 — queda de 96% desde out/25
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEÇÃO 1: VISÃO GERAL ===== -->
+<h2>① Visão Geral — Evolução de Placements</h2>
+
+<div class="grid-4">
+  <div class="card">
+    <div class="kpi-label">Total Convertidos (período)</div>
+    <div class="kpi-value">5,478,282</div>
+    <div class="kpi-sub">Jan/25 → Mar/26</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Melhor Mês Histórico</div>
+    <div class="kpi-value">570,880</div>
+    <div class="kpi-sub">Nov/2025 <span class="kpi-up">▲ pico</span></div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Mar/26 vs Fev/26</div>
+    <div class="kpi-value" style="color:var(--green)">+10,6%</div>
+    <div class="kpi-sub">503k → 557k — acelerando</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Crescimento Jan/25→Mar/26</div>
+    <div class="kpi-value" style="color:var(--green)">+174%</div>
+    <div class="kpi-sub">202k → 557k usuários/mês</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="chart-title">Total de usuários convertidos por mês</div>
+  <canvas id="chartTotal"></canvas>
+</div>
+
+<div class="grid-2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="chart-title" id="titleMoM">Variação MoM por placement (%)</div>
+    <canvas id="chartMoM" style="max-height:280px"></canvas>
+  </div>
+  <div class="card">
+    <div class="chart-title" id="titleMar3m">Top placements — 3 últimos meses</div>
+    <canvas id="chartMar3m" style="max-height:280px"></canvas>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="chart-title">Evolução dos top placements — clique nas pills para filtrar</div>
+  <div class="pill-row" id="pillRow"></div>
+  <canvas id="chartLines" style="max-height:360px"></canvas>
+</div>
+
+<div class="grid-3">
+  <div class="card">
+    <div class="chart-title">Tabela completa — usuários por placement × mês</div>
+    <div class="table-wrap"><table id="heatTable"></table></div>
+  </div>
+  <div class="card">
+    <div class="chart-title">Insights — placements</div>
+    <ul class="insight-list">
+      <li><span class="icon">🚀</span><div><span class="tag tag-ok">MAR/26 #1</span><strong>HOME_MINICARD_RESTYLING — líder absoluto.</strong> 112.834 usuários (+23% vs fev). É o maior canal do portfólio desde ago/25 e não dá sinais de desaceleração.</div></li>
+      <li><span class="icon">⚡</span><div><span class="tag tag-ok">MAR/26 ACELEROU</span><strong>EA — 102k em mar/26, era zero em dez/25.</strong> +44% MoM pelo 3º mês seguido. Tendência clara de escala — deve ultrapassar MINICARD em 2-3 meses se mantiver ritmo.</div></li>
+      <li><span class="icon">📈</span><div><span class="tag tag-ok">RECORDE</span><strong>PUSH_ML_ENCENDIDO_D1 — +101% em março.</strong> 16.138 usuários, maior valor histórico. É o melhor canal de push ativo, com consistência desde abr/25.</div></li>
+      <li><span class="icon">📊</span><div><span class="tag tag-watch">ATENÇÃO</span><strong>CHO - Checkout ML — -15% em março.</strong> Era o 2º canal (87k em nov/25), caiu para 57k. Não recuperou pós-queda de dez/25. Avaliar se é sazonalidade ou mudança estrutural.</div></li>
+      <li><span class="icon">➡️</span><div><span class="tag tag-info">ESTÁVEL</span><strong>Bottom Sheet — flat em março.</strong> 50.459 → 50.482 (+0,04%). Estabilizou mas longe do pico (75k em jun/25). Pode estar próximo do teto atual.</div></li>
+      <li><span class="icon">📉</span><div><span class="tag tag-alert">PAROU</span><strong>BANNER_DASHBOARD — praticamente morto.</strong> 365 usuários em mar/26, era 41k em jun/25. Queda de 99% em 9 meses. Descontinuado?</div></li>
+      <li><span class="icon">📉</span><div><span class="tag tag-alert">PAROU</span><strong>HOME_MINICARD_MP legado — 203 usuários.</strong> Substituído pela versão RESTYLING. Pode ser arquivado.</div></li>
+      <li><span class="icon">📉</span><div><span class="tag tag-alert">PAROU</span><strong>MP_HOME_ANITTA — zerou em março.</strong> Campanha encerrada. Picou em 66k (jul/25), agora sem impacto.</div></li>
+      <li><span class="icon">🔎</span><div><span class="tag tag-watch">INVESTIGAR</span><strong>VIP -14% em março</strong> — 2º mês consecutivo de queda. Era 9.8k em nov/25, caiu para 6.7k. Mudança de tráfego ou de elegibilidade?</div></li>
+    </ul>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="chart-title">Top 10 placements — volume acumulado</div>
+    <canvas id="chartBar"></canvas>
+  </div>
+  <div class="card">
+    <div class="chart-title">Comunicações únicas (push/campanha com data) por mês</div>
+    <canvas id="chartUnicos"></canvas>
+  </div>
+</div>
+
+<!-- ===== SEÇÃO 2: SEGMENTAÇÃO POR NISE ===== -->
+<h2>② Segmentação por NISE · Tipo de TC</h2>
+
+<!-- FILTRO GLOBAL TC -->
+<div id="tcFilterBar" style="background:#12151f;border:1.5px solid var(--border);border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+  <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Filtro global — Tipo de TC:</span>
+  <button class="tc-btn active" id="btn-todos" onclick="setTC('todos',this)">Todos</button>
+  <button class="tc-btn" id="btn-full" onclick="setTC('full',this)">TC Full</button>
+  <button class="tc-btn" id="btn-micro" onclick="setTC('micro',this)">Micro TC</button>
+  <span style="font-size:11px;color:var(--muted);margin-left:8px;" id="tcNote">↑ afeta todos os gráficos abaixo</span>
+</div>
+
+<div class="grid-4">
+  <div class="card">
+    <div class="kpi-label">One Page — Platinum</div>
+    <div class="kpi-value" style="color:var(--accent2)">24.8%</div>
+    <div class="kpi-sub">vs 8.4% no Bronze — escala com NISE</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Bottom Sheet — mais forte em</div>
+    <div class="kpi-value" style="color:var(--green)">Bronze · Silver</div>
+    <div class="kpi-sub">12.7% Bronze · 12.5% Silver — canal de entrada</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">Micro TC — concentrado em</div>
+    <div class="kpi-value" style="color:var(--accent)">Bronze + Silver</div>
+    <div class="kpi-sub">51.5% Bronze · 47.9% Silver · ~0% Gold/Plat</div>
+  </div>
+  <div class="card">
+    <div class="kpi-label">EA — mais forte em</div>
+    <div class="kpi-value" style="color:var(--orange)">Bronze (Micro TC)</div>
+    <div class="kpi-sub">8.2% no Bronze Micro vs 5.6% Full — canal diferenciado</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px">
+  <div class="chart-title">Insights — NISE e Tipo de TC influenciam o placement?</div>
+  <ul class="insight-list">
+    <li><span class="icon">✅</span><div><span class="tag tag-ok">SIM — NISE importa</span><strong>One Page escala com NISE:</strong> 8.4% (Bronze) → 11.3% (Silver) → 15.8% (Gold) → 24.8% (Platinum). Usuário de melhor score ativa mais em jornadas completas.</div></li>
+    <li><span class="icon">🎯</span><div><span class="tag tag-info">MICRO TC</span><strong>Micro TC é quase 100% Bronze + Silver.</strong> Praticamente zero em Gold/Platinum — produto diferente, público diferente. Use filtro "Micro TC" para ver como esse público converte.</div></li>
+    <li><span class="icon">📊</span><div><span class="tag tag-watch">MINICARD REST.</span>No Gold com Micro TC domina com <strong>22.3%</strong> — muito acima de todos os outros placements. Sinal claro de que o canal responde bem nesse nicho específico.</div></li>
+    <li><span class="icon">📈</span><div><span class="tag tag-ok">CHO CHECKOUT</span>Escala com NISE em TC Full: 8.2% (Bronze) → 11% (Silver) → 13.2% (Gold) → 14.9% (Platinum). Faz sentido — Platinum compra mais no ML.</div></li>
+    <li><span class="icon">🔎</span><div><span class="tag tag-alert">EA no Micro TC</span>EA tem share maior no Micro TC Bronze (8.2%) do que no Full (5.6%). Canal parece mais eficaz para usuários de baixo limite + Micro TC — vale investigar.</div></li>
+  </ul>
+</div>
+
+<div class="grid-3w" style="margin-bottom:20px">
+  <div class="card">
+    <div class="chart-title">Mix de placements por NISE <span id="tcLabelMix" style="color:var(--accent);font-size:10px;margin-left:6px;"></span></div>
+    <div class="seg-tabs" id="niseMixTabs">
+      <div class="seg-tab t-bronze active" onclick="switchNiseMix('Bronze',this)">Bronze</div>
+      <div class="seg-tab t-silver" onclick="switchNiseMix('Silver',this)">Silver</div>
+      <div class="seg-tab t-gold" onclick="switchNiseMix('Gold',this)">Gold</div>
+      <div class="seg-tab t-platinum" onclick="switchNiseMix('Platinum',this)">Platinum</div>
+    </div>
+    <canvas id="chartMix"></canvas>
+  </div>
+  <div class="card">
+    <div class="chart-title">Distribuição NISE <span id="tcLabelNise" style="color:var(--accent);font-size:10px;margin-left:6px;"></span></div>
+    <canvas id="chartNise"></canvas>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="chart-title">Share por placement × NISE — como o canal muda com o tier <span id="tcLabelVol" style="color:var(--accent);font-size:10px;margin-left:6px;"></span></div>
+    <canvas id="chartVolGrupo"></canvas>
+  </div>
+  <div class="card">
+    <div class="chart-title">Mix NISE por tipo de TC</div>
+    <canvas id="chartTC"></canvas>
+  </div>
+</div>
+
+<script>
+// =================== DADOS ===================
+// ===== DATA =====
+const MESES_LABEL = ["Dez/24","Jan/25","Fev/25","Mar/25","Abr/25","Mai/25","Jun/25","Jul/25","Ago/25","Set/25","Out/25","Nov/25","Dez/25","Jan/26","Fev/26","Mar/26","Abr/26"];
+const TOTAL_MES = [66556,205479,217168,304254,361903,395047,538692,602055,538827,513853,586892,621689,388873,495094,507811,619500,365662];
+const PIVOT = {
+  "One Page":[16280,37187,36707,55131,55076,57782,75368,82998,74612,66739,60640,67864,45716,50569,51265,64943,33714],
+  "Bottom Sheet":[11875,31571,27255,50716,54558,56168,75276,75512,64928,58409,61942,72857,41228,46866,50459,55434,27953],
+  "HOME_MINICARD_MP_RESTYLING":[null,null,null,null,null,null,null,null,1543,16741,94371,130763,95727,109639,91783,124925,58124],
+  "CHO - CHECKOUT ML":[null,null,null,80,18233,20381,66841,71742,59417,57142,68896,87455,51567,56244,66512,62307,34505],
+  "Onboarding":[3372,8224,7865,15224,18417,21382,29545,37143,41263,44873,59413,54130,31155,36495,34175,40363,18461],
+  "HOME_MINICARD_MP":[6281,20288,24216,34231,35878,43960,42039,41548,37118,31234,18669,5397,736,405,289,216,32],
+  "EA":[null,null,null,null,null,null,null,null,null,null,null,null,3208,34917,70751,105631,108804],
+  "BANNER_DASHBOARD":[6234,15857,18865,27620,31612,38586,41629,40859,31851,32762,24182,6846,1110,535,369,406,87],
+  "MP_HOME_ANITTA":[null,null,null,null,3823,12785,55425,66545,59170,51509,33002,14,2,1,1,null,null],
+  "PUSH":[1513,13628,17319,24581,17846,17268,11048,10266,9861,10079,7937,7871,4784,8760,8153,10336,5081],
+  "PUSH_ML_ENCENDIDO_D1":[null,2927,4210,5859,13640,9771,8388,14090,9825,9029,10436,5683,3594,11397,8034,16145,8518],
+  "CARDS_LISTING_RESTYLING_FULL_TC":[null,null,null,null,null,null,null,null,215,104,14239,20532,15276,20864,22363,23857,11873],
+  "VIP":[2020,4490,8596,5629,4797,4784,7330,7579,7528,6371,5873,9827,6422,6403,7752,7592,3678],
+  "PDP":[1482,3612,6323,4095,3111,2882,4112,4191,4633,3956,4624,9912,5612,5238,5976,6330,2909],
+  "PUSH_ML_D10":[322,1567,1818,2028,5424,8505,9351,4927,3943,2987,2332,2625,1989,3009,5138,8640,554],
+  "QA_NBT_TEST":[1773,1191,4521,6693,4981,568,65,12011,15410,13033,1416,1162,518,null,null,null,null],
+  "MODAL_DE_PAGOS":[null,null,1697,3211,3390,3398,3922,4669,4631,4676,5099,7633,4406,4167,3815,4267,1849],
+  "CARDS_LISTING_RESTYLING_MICRO_TC":[null,null,null,null,null,null,null,null,94,42,10106,10253,8153,10567,7061,7792,3772],
+  "DRAWER_ML":[1081,1913,1319,1284,4409,6084,6410,1465,4552,6978,6492,6849,3850,2409,964,227,90],
+  "VIP_WEB":[null,null,null,null,null,null,null,1,3644,7836,7186,8576,5115,4820,5379,5998,3033],
+  "PUSH_FLOWS_ENC_ENG":[null,null,null,null,null,null,815,8555,5837,6726,5470,5551,2653,4443,3972,2448,3191],
+  "WAITLIST_APPROVED_PUSH":[1,19,8,4167,4473,4238,10181,8268,6039,724,2831,1888,1477,1276,845,624,327],
+  "PUSH_ML_DROPFLUXO":[394,1282,1322,1871,2952,3012,3737,4915,4162,3930,4279,3367,1897,1326,2674,3262,1576],
+  "BARRIDA_PENDING_ML":[437,5323,9090,10759,7935,74,219,55,125,84,122,64,34,2820,4521,3369,8],
+  "CONGRATS_COMPRA_ML":[null,null,null,null,null,null,830,6044,5160,4660,5056,5480,3495,3679,3440,4352,2217],
+  "WAITLIST_APPROVED_HERMES":[1,9,14,3328,3674,4549,6466,6347,5454,3837,2808,1869,1378,1244,1171,652,435],
+  "PUSH_ML_CHECKOUT":[467,1796,2237,3326,3123,1481,1714,1229,755,2345,2853,3055,2744,3207,3879,4172,2301],
+  "CREDIT_SCORING_PRODUCTS":[275,742,832,1769,2032,2883,3426,2840,2064,2614,3015,4449,1593,607,457,604,128],
+  "PUSH_FLOWS_ENC_ACT":[null,null,null,null,null,null,642,3770,3634,3963,4582,3640,1960,2136,2382,1734,1513],
+  "PUSH_MP_UPSELL":[327,4106,6746,5726,6436,5527,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_HOME_EDC_BANNER":[4766,10563,3707,3272,2500,6,16,38,11,5,1,null,null,null,null,null,null],
+  "CREDIT_NUMERIC_SCORING":[null,null,null,null,null,null,null,null,null,null,null,194,3417,7120,5263,5510,2448],
+  "CREDIT_SCORING_BANNER":[null,null,21,1585,1764,2583,3467,2335,1669,2400,2606,3754,982,null,null,null,null],
+  "PUSH_ML_ENCENDIDO_D1_MICRO":[null,null,null,null,null,null,null,null,null,null,null,4337,1887,6452,3436,3451,2974],
+  "PUSH_ML_UPSELL":[286,2844,3051,1583,1603,1078,1434,874,1175,991,851,792,646,null,1506,1699,417],
+  "EMAIL_ML_PD_ENCENDIDO":[null,null,null,399,2198,1469,1564,3193,2227,841,829,947,507,1568,1248,1206,819],
+  "FAQ_SOLICITUD_TC_MP":[748,1639,931,1247,1688,2116,1609,1711,1189,2202,1559,826,309,203,129,131,2],
+  "PUSH_TESTE_LIMITE_ML":[null,null,8169,5345,2799,1303,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_ONBOARDING_MP_MELIMAS":[null,null,null,542,3240,2088,1692,2724,1354,980,473,366,427,220,91,607,785],
+  "WPP_EG_1308":[null,null,null,null,null,null,null,null,null,null,null,6223,3237,5548,7,3,null],
+  "PUSH_FLOWS_UPSELL_ENG":[null,null,null,null,null,null,5,2,1327,2565,2086,1696,955,1522,null,2275,2290],
+  "ML_PUSH_1207":[null,null,null,null,null,null,null,14377,null,null,null,null,null,null,null,null,null],
+  "CREDIT_CARD_PUSHES_FLOWS":[null,null,null,null,null,null,458,1762,1565,1721,1889,1592,1022,1196,1344,1220,331],
+  "PUSH_ML_MICRO_D6":[null,null,null,null,null,null,1065,1146,997,775,2326,1490,877,261,2664,2378,8],
+  "MODAL_MP_AO_BAU_EG":[null,null,null,null,null,null,2068,1488,1514,1171,1475,1335,788,930,1283,643,1115],
+  "MP_HOME_LOYALTY_BANNER":[498,1500,1219,1392,1730,2408,1262,1068,783,586,440,414,46,13,18,7,4],
+  "MP_MODAL_2407":[null,null,null,null,null,null,null,13042,null,null,null,null,null,null,null,null,null],
+  "BARRIDA_PENDING_ML_MELIMAS":[283,1362,1016,1345,1090,1341,1782,2007,654,1296,486,null,null,null,null,null,null],
+  "EMAIL_D1_MICRO":[null,null,null,null,null,null,null,616,1529,1419,1360,1787,1062,1107,644,804,622],
+  "EMAIL_MP_ENCENDIDO":[null,null,null,196,1409,519,4228,1114,702,482,385,446,200,6,null,null,null],
+  "MP_MODAL_0908":[null,null,null,null,null,null,null,null,9226,null,null,null,null,null,null,null,null],
+  "SMART":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,7197,1947],
+  "EMAIL_MP_(071124)":[null,null,null,null,null,null,2082,842,807,1126,1135,913,534,637,358,422,19],
+  "ML_HUB_LOYALTY":[null,null,17,461,457,759,563,473,158,238,527,532,729,707,788,862,498],
+  "MP_SHORTCUT_0111":[null,null,null,null,null,null,null,null,null,null,null,7555,null,null,null,null,null],
+  "PLACEMENT NAO ENCONTRADO":[555,1476,1418,1103,1059,1325,440,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_D1_BARRIDA":[null,7312,28,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WHATSAPP_TESTE_JUNHO_ML":[null,null,null,null,null,null,1039,2869,2223,917,238,4,1,1,null,1,null],
+  "MP_PUSH_2806":[null,null,null,null,null,null,6832,35,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_0406":[null,null,null,null,null,null,6812,null,null,null,null,null,null,null,null,null,null],
+  "MP_SHORTCUT_2306":[null,null,null,null,null,null,6469,4,null,null,1,null,null,null,null,null,null],
+  "XSELL_MP_BBB":[null,null,null,null,null,null,null,null,null,null,null,null,null,3198,3256,null,null],
+  "RMI_PLUS_ACCOUNT_HUB":[542,1247,1356,1763,1485,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_ELD_70_260303":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,2536,3395],
+  "ML_PUSH_2106":[null,null,null,null,null,null,5900,null,1,null,null,null,null,null,null,null,null],
+  "PUSH_MP_MAON":[75,2158,86,null,null,null,68,378,522,745,493,null,null,307,352,506,161],
+  "PUSH_MAON_ML":[null,null,null,null,92,193,59,449,381,697,797,671,503,460,444,523,298],
+  "CARDS_LISTING":[3,239,401,705,799,901,1010,770,600,17,24,10,1,3,2,1,null],
+  "MP_MODAL_NMMAIS_2008":[null,null,null,null,null,null,null,null,5355,null,null,null,null,null,null,null,null],
+  "CM_SCORING":[150,418,410,409,454,372,525,493,454,675,972,null,null,null,null,null,null],
+  "MP_PUSH_0805":[null,null,null,null,null,5315,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_FLOW_NEW_ENG_MELIMAS":[null,null,null,null,3,318,268,384,208,578,348,394,317,248,595,861,653],
+  "MP_MODAL_NMMAIS_0311":[null,null,null,null,null,null,null,null,null,null,null,5123,null,null,null,null,null],
+  "MP_SHORTCUT_1509":[null,null,null,null,null,null,null,null,null,4894,null,null,null,null,null,1,null],
+  "ML_PUSH_0811":[null,null,null,null,null,null,null,null,null,null,null,4640,null,null,null,null,null],
+  "MODAL_GTM_BBB":[null,null,null,null,null,null,null,null,null,null,null,null,null,1680,2526,null,null],
+  "CREDIT_SCORING_MODAL":[379,1611,2214,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "SEARCH_HOME_MP":[null,5,6,7,10,15,10,17,19,149,441,556,566,656,571,709,401],
+  "ML_PUSH_0612":[null,null,null,null,null,null,null,null,null,null,null,null,3966,null,null,null,null],
+  "PRIMER_QA_PS":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,3879],
+  "MP_MODAL_NMMAIS_1607":[null,null,null,null,null,null,null,3786,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_1110":[null,null,null,null,null,null,null,null,null,null,3769,null,null,null,null,null,null],
+  "ONBOARDING_MP_PUSH":[252,580,417,595,623,660,621,2,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_ENCENDIDO_D1_MELIMAS":[5,656,584,802,874,711,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_SHORTCUT_2507":[null,null,null,null,null,null,null,3606,3,null,null,null,null,null,null,null,null],
+  "MP_MODAL_DATADPUPLA_260327":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1999,1554],
+  "MP_MODAL_0109":[null,null,null,null,null,null,null,null,null,3448,null,null,null,null,null,null,null],
+  "ML_PUSH_1810":[null,null,null,null,null,null,null,null,null,null,3422,null,null,null,null,null,null],
+  "WIDGET_LIFECYCLE_HOME_SELLER":[null,null,null,null,null,207,568,469,414,279,207,339,226,205,175,205,108],
+  "ML_PUSH_030126":[null,null,null,null,null,null,null,null,null,null,null,null,null,3398,null,null,null],
+  "ML_PUSH_2009":[null,null,null,null,null,null,null,null,null,3323,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_2309":[null,null,null,null,null,null,null,null,null,3270,null,null,null,null,null,null,null],
+  "QUICK_ACCESS_HOME":[1116,1274,158,177,99,73,122,96,60,20,15,4,1,null,null,null,null],
+  "MP_1305":[null,null,null,null,null,3195,null,null,null,null,null,null,null,null,null,null,null],
+  "BANNER_DETALLE_MUSD":[288,674,459,755,583,413,null,null,1,null,null,2,null,null,null,null,null],
+  "PUSH_MMAIS_0804":[null,null,null,null,3171,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_0704":[null,null,null,null,3163,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2510":[null,null,null,null,null,null,null,null,null,null,3138,null,null,null,null,null,null],
+  "MODAL_2804":[null,null,null,null,2480,606,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_SHORTCUT_2010":[null,null,null,null,null,null,null,null,null,null,3037,1,null,null,null,null,null],
+  "TESTE_PUSH_LIMITE_ML":[null,null,null,null,null,2914,109,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_1608":[null,null,null,null,null,null,null,null,2996,null,null,null,null,null,null,null,null],
+  "ML_PUSH_0906":[null,null,null,null,null,null,2979,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_0207":[null,null,null,null,null,null,null,2961,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2207":[null,null,null,null,null,null,null,2906,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_2506":[null,null,null,null,null,null,2880,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_GTM_IPHONE_24X":[null,1668,1171,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_1011":[null,null,null,null,null,null,null,null,null,null,null,2825,null,null,null,null,null],
+  "MP_SHORTCUT_2805":[null,null,null,null,null,2815,3,null,null,null,null,null,null,null,null,null,null],
+  "BARRIDA_PENDING_ML_MICRO":[null,null,null,null,null,null,null,null,null,null,null,24,6,889,1008,873,6],
+  "MP_MODAL_NMMAIS_2708":[null,null,null,null,null,null,null,null,2806,null,null,null,null,null,null,null,null],
+  "MP_MODAL_1405":[null,null,null,null,null,2732,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_1209":[null,null,null,null,null,null,null,null,null,2725,null,null,null,null,null,null,null],
+  "MP_SHORTCUT_2008":[null,null,null,null,null,null,null,null,2642,1,null,1,null,null,null,null,null],
+  "MP_SHORTCUT_1108":[null,null,null,null,null,null,null,null,2582,null,null,null,null,null,null,null,null],
+  "ML_PUSH_1108":[null,null,null,null,null,null,null,null,2560,null,null,null,null,null,null,null,null],
+  "MP_HUB_LOYALTY":[null,null,null,null,null,null,80,268,180,119,158,213,226,301,363,426,203],
+  "PUSH_ML_CHECKOUT_MELIMAS":[298,755,785,634,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_1203":[null,null,null,2425,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_0710":[null,null,null,null,null,null,null,null,null,null,2376,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_1007":[null,null,null,null,null,null,null,2317,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_3105":[null,null,null,null,null,1957,359,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_0906":[null,null,null,null,null,null,2297,null,null,null,null,null,null,null,null,null,null],
+  "HOME_DESKTOP":[null,1,67,95,94,107,124,107,131,230,187,296,181,208,171,204,94],
+  "CREDIT_NUMERIC_SCORING_PRODUCTS":[null,null,null,null,null,null,null,null,null,null,null,36,299,563,536,555,293],
+  "PUSH_TESTE_LIMITE_MP":[null,null,null,null,null,2276,2,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_0111":[null,null,null,null,null,null,null,null,null,null,null,2250,null,null,null,null,null],
+  "ML_PUSH_2808":[null,null,null,null,null,null,null,null,2236,null,null,null,null,null,null,null,null],
+  "ML_PUSH_2607":[null,null,null,null,null,null,null,2188,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_2308":[null,null,null,null,null,null,null,null,2142,null,null,null,null,null,null,null,null],
+  "MP_PUSH_0512":[null,null,null,null,null,null,null,null,null,null,null,null,2135,null,null,null,null],
+  "WPP_FLOWS_ENGAJ":[null,null,null,null,null,null,null,null,null,null,null,null,null,2053,39,1,null],
+  "ML_MMAIS_2705":[null,null,null,null,null,2064,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_1511":[null,null,null,null,null,null,null,null,null,null,null,1993,null,null,null,null,null],
+  "ML_PUSH_100126":[null,null,null,null,null,null,null,null,null,null,null,null,null,1977,null,null,null],
+  "PUSHML_TCAQUISICAO_1305":[null,null,null,null,null,1952,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_0112":[null,null,null,null,null,null,null,null,null,null,null,null,1948,null,null,null,null],
+  "PUSHML_TCAQUISICAO_2304":[null,null,null,null,1946,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSHML_TCAQUISICAO_2804":[null,null,null,null,1791,89,null,null,null,null,null,null,null,null,null,null,null],
+  "MAXWELL":[null,null,null,null,null,null,null,null,1,58,246,367,226,215,265,281,215],
+  "ML_PUSH_240126":[null,null,null,null,null,null,null,null,null,null,null,null,null,1869,null,null,null],
+  "ML_PUSH_0609":[null,null,null,null,null,null,null,null,null,1801,null,null,null,null,null,null,null],
+  "ML_PUSH_1312":[null,null,null,null,null,null,null,null,null,null,null,null,1797,null,null,null,null],
+  "MP_PUSH_0702":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,1782,null,null],
+  "MP_PUSH_NMMAIS_1308":[null,null,null,null,null,null,null,null,1760,null,null,null,null,null,null,null,null],
+  "ML_PUSH_170126":[null,null,null,null,null,null,null,null,null,null,null,null,null,1735,null,null,null],
+  "MP_MODAL_50OFF_1509":[null,null,null,null,null,null,null,null,null,1707,null,null,null,null,null,null,null],
+  "PUSHML_TCAQUISICAO_2205":[null,null,null,null,null,1688,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1310":[null,null,null,null,null,null,null,null,null,null,1677,null,null,null,null,null,null],
+  "MP_PUSH_0207":[null,null,null,null,null,null,null,1618,null,null,null,null,null,null,null,null,null],
+  "TC_WAITLIST":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,985,558],
+  "MP_SHORTCUT_0412":[null,null,null,null,null,null,null,null,null,null,null,null,1530,2,null,null,null],
+  "MP_MODAL_NMMAIS_190126":[null,null,null,null,null,null,null,null,null,null,null,null,null,1525,null,null,null],
+  "MP_MMAIS_1605":[null,null,null,null,null,1476,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MP_1103":[null,null,null,1466,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_1111":[null,null,null,null,null,null,null,null,null,null,null,1426,null,null,null,null,null],
+  "EMAIL_ML_ENCENDIDO":[null,null,null,null,273,15,370,314,139,111,75,56,49,null,1,2,null],
+  "MP_PUSH_1408":[null,null,null,null,null,null,null,null,1397,null,null,null,null,null,null,null,null],
+  "MP_MODAL_35OFF_0910":[null,null,null,null,null,null,null,null,null,null,1389,null,null,null,null,null,null],
+  "MP_MODAL_120126":[null,null,null,null,null,null,null,null,null,null,null,null,null,1340,null,null,null],
+  "MMAIS_MODAL_0904":[null,null,null,null,1317,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_2211":[null,null,null,null,null,null,null,null,null,null,null,1305,null,null,null,null,null],
+  "BANNER_AWARENESS_DETALLE_MUSD":[null,null,null,null,null,11,325,263,165,116,53,32,17,70,99,98,54],
+  "MODAL_2503":[null,null,null,1269,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_GTM_MOTOWEEK":[null,null,null,null,1265,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MP_2403":[null,null,null,1248,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MMAIS_ML_1004":[null,null,null,null,1231,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MMAIS_MODAL_2105":[null,null,null,null,null,1219,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_0505":[null,null,null,null,null,1219,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_070125_FM070125-I-M-ENG-JAN1-TC-AQUISICAO-MODAL":[null,1211,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "VERDI_AGENT":[null,null,null,null,null,null,90,254,259,357,234,null,null,null,null,null,null],
+  "ML_PUSH_310126":[null,null,null,null,null,null,null,null,null,null,null,null,null,888,287,1,null],
+  "BENEFITS_HOME_MP":[null,null,null,null,null,null,null,null,null,null,null,36,557,122,156,233,63],
+  "MP_PUSH_2808":[null,null,null,null,null,null,null,null,878,275,null,null,null,null,null,null,null],
+  "PUSH_GTM_IPHONE_24X":[null,494,641,18,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MMAIS_1405":[null,null,null,null,null,1140,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_2107":[null,null,null,null,null,null,null,1125,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_D10_MELIMAS":[41,337,211,223,300,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1006":[null,null,null,null,null,null,1074,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_2712":[null,null,null,null,null,null,null,null,null,null,null,null,1073,null,null,null,null],
+  "ML_PUSH_0702":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,1071,null,null],
+  "MP_MODAL_NMMAIS_B_2010":[null,null,null,null,null,null,null,null,null,null,1070,null,null,null,null,null,null],
+  "MP_PUSH_0209_B":[null,null,null,null,null,null,null,null,null,1050,18,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_99_1310":[null,null,null,null,null,null,null,null,null,null,1059,null,null,null,null,null,null],
+  "PUSH_ML_UPSELL_MELIMAS":[57,450,199,71,152,121,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_TCAQUI_1501":[null,1050,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_0104":[null,null,null,null,1047,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_35OFF_2508":[null,null,null,null,null,null,null,null,1040,null,null,null,null,null,null,null,null],
+  "ONBOARDING_LOYALTY_HUB":[null,597,442,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_70OFF_0611":[null,null,null,null,null,null,null,null,null,null,null,1004,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_PETROBRAS_1310":[null,null,null,null,null,null,null,null,null,null,998,null,null,null,null,null,null],
+  "EMAIL_FULLL":[null,null,null,null,null,null,931,53,8,1,null,null,null,null,null,null,null],
+  "PUSH_MP_50OFF":[null,null,null,null,993,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_MEQUI_1310":[null,null,null,null,null,null,null,null,null,null,993,null,null,null,null,null,null],
+  "ML_PUSH_2307":[null,null,null,null,null,null,null,991,null,null,null,null,null,null,null,null,null],
+  "MODAL_MP_130125":[null,987,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_2801":[null,977,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_0911":[null,null,null,null,null,null,null,null,null,null,null,965,null,null,null,null,null],
+  "PUSH_MP_1902":[null,null,964,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_3009":[null,null,null,null,null,null,null,null,null,638,326,null,null,null,null,null,null],
+  "ML_PUSH_2709":[null,null,null,null,null,null,null,null,null,963,null,null,null,null,null,null,null],
+  "MP_PUSH_0609":[null,null,null,null,null,null,null,null,null,926,35,null,null,null,null,null,null],
+  "MP_BBB_26_TV_2001":[null,null,null,null,null,null,null,null,null,null,null,null,null,951,null,null,null],
+  "ML_PUSH_2012":[null,null,null,null,null,null,null,null,null,null,null,null,927,null,null,null,null],
+  "MODAL_1002_C50":[null,null,912,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_0608":[null,null,null,null,null,null,null,null,901,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1609":[null,null,null,null,null,null,null,null,null,898,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_C_2110":[null,null,null,null,null,null,null,null,null,null,886,null,null,null,null,null,null],
+  "MMAIS_MODAL_2504":[null,null,null,null,877,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_A_2010":[null,null,null,null,null,null,null,null,null,null,856,null,null,null,null,null,null],
+  "MP_PUSH_SEM_DESCONTO_260323":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,852,null],
+  "BARRIDA_30_MP_MELIMAS":[22,305,258,263,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_0809":[null,null,null,null,null,null,null,null,null,847,null,null,null,null,null,null,null],
+  "MP_PUSH_2105":[null,null,null,null,null,842,null,null,null,null,null,null,null,null,null,null,null],
+  "SELLING_COACH":[4,9,40,68,75,68,69,56,66,52,98,56,23,73,25,34,25],
+  "MP_PUSH_3009":[null,null,null,null,null,null,null,null,null,669,172,null,null,null,null,null,null],
+  "PUSH_MMAIS_2504":[null,null,null,null,836,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_0509":[null,null,null,null,null,null,null,null,null,836,null,null,null,null,null,null,null],
+  "ONBOARDING-MODAL-CASHBACK":[null,27,15,29,137,191,137,116,91,85,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_0807":[null,null,null,null,null,null,null,813,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_50OFF_0310":[null,null,null,null,null,null,null,null,null,null,810,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_2011":[null,null,null,null,null,null,null,null,null,null,null,809,null,null,null,null,null],
+  "PARCELA_TUDO":[68,163,190,285,102,null,1,null,null,null,null,null,null,null,null,null,null],
+  "MP_BBB_26_TV_1002":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,802,null,null],
+  "MP_MODAL_ELD_35_260303":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,786,null],
+  "PUSH_ML_280725":[null,null,null,null,null,null,null,782,null,null,null,null,null,null,null,null,null],
+  "MP_SHORTCUT_010126":[null,null,null,null,null,null,null,null,null,null,null,null,null,779,null,null,null],
+  "ML_PUSH_NMMAIS_2306":[null,null,null,null,null,null,775,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_1408":[null,null,null,null,null,null,null,null,764,null,null,null,null,null,null,null,null],
+  "MP_PUSH_0209_A":[null,null,null,null,null,null,null,null,null,757,6,null,null,null,null,null,null],
+  "MP_PUSH_MAON_1609":[null,null,null,null,null,null,null,null,null,752,null,null,null,null,null,null,null],
+  "ML_PUSH_70OFF_260314":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,752,null],
+  "MS_220425_ANITTA_BENEFITS_ELDORADO":[null,null,null,null,743,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_50OFF_260212":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,742,null,null],
+  "HUB_MP_BBB":[null,null,null,null,null,null,null,null,null,null,null,null,null,535,207,null,null],
+  "MP_PUSH_0707":[null,null,null,null,null,null,null,737,null,null,null,null,null,null,null,null,null],
+  "MS_0425_ANITTA_BENEFITS_PRESCORED":[null,null,null,null,737,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_35_ABR_BAU":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,728],
+  "MP_PUSH_2208_B":[null,null,null,null,null,null,null,null,725,null,null,null,null,null,null,null,null],
+  "ML_DRAWER_LOYALTY":[null,null,98,62,84,169,69,30,17,null,1,null,195,null,null,null,null],
+  "MP_MODAL_50OFF_260202":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,725,null,null],
+  "MP_PUSH_NMMAIS_3010":[null,null,null,null,null,null,null,null,null,null,660,63,null,null,null,null,null],
+  "PORTABILIDADE":[16,43,55,62,108,85,76,60,48,35,18,24,40,30,15,7,null],
+  "MP_PUSH_SEM_DESCONTO_260316":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,714,null],
+  "MP_MODAL_35OFF_0812":[null,null,null,null,null,null,null,null,null,null,null,null,711,null,null,null,null],
+  "PUSH_ML_DROPFLUXO_MELIMAS":[34,131,149,148,70,34,30,41,40,33,null,null,null,null,null,null,null],
+  "PUSH_ML_2904":[null,null,null,null,586,117,null,null,null,null,null,null,null,null,null,null,null],
+  "MAIL_ONBOARDING_LOYALTY":[null,54,39,68,73,56,43,40,30,23,21,37,40,55,48,56,20],
+  "ML_PUSH_NMMAIS_2508":[null,null,null,null,null,null,null,null,703,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2208_A":[null,null,null,null,null,null,null,null,701,null,null,null,null,null,null,null,null],
+  "MP_MODAL_ELD_70_260302":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,697,null],
+  "PUSH_ML_190825":[null,null,null,null,null,null,null,null,690,null,null,null,null,null,null,null,null],
+  "MP_ELDO_70_1":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,685,null,null],
+  "ML_PUSH_2911":[null,null,null,null,null,null,null,null,null,null,null,579,95,null,null,null,null],
+  "XSELL_NEWBIES_MP_BBB":[null,null,null,null,null,null,null,null,null,null,null,null,null,62,611,null,null],
+  "MP_35OFF_1305":[null,null,null,null,null,670,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_50OFF_1305":[null,null,null,null,null,658,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_0906":[null,null,null,null,null,null,648,null,null,null,null,null,null,null,null,null,null],
+  "HUB_BENEFITS_EDC_ANITTA_RTS":[null,null,null,null,null,null,null,null,null,333,314,null,null,null,null,null,null],
+  "PUSH_ML_270525":[null,null,null,null,null,641,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_2611":[null,null,null,null,null,null,null,null,null,null,null,636,null,null,null,null,null],
+  "MP_MODAL_2811":[null,null,null,null,null,null,null,null,null,null,null,635,null,null,null,null,null],
+  "MODAL_GTM_INTEL_21X_MARCO":[null,null,null,631,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_50OFF_1106":[null,null,null,null,null,null,625,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MMAIS_0808":[null,null,null,null,null,null,null,null,623,null,null,null,null,null,null,null,null],
+  "PUSH_MP_2404":[null,null,null,null,607,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_50OFF_1205":[null,null,null,null,null,601,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_MP_AO_KAIROS":[null,null,null,null,null,null,266,335,null,null,null,null,null,null,null,null,null],
+  "MODAL_231224_FM231224-I-M-ENG-TC-AQUISICAO-MODAL":[587,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_140125_FM140125-I-M-ELDORADO-MODAL-JAN01":[null,582,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_ELDO_50_1":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,581,null,null],
+  "PUSH_ML_020925":[null,null,null,null,null,null,null,null,null,580,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_2807":[null,null,null,null,null,null,null,550,30,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MODAL_0605":[null,null,null,null,null,579,null,null,null,null,null,null,null,null,null,null,null],
+  "TV_QRCODE040525":[null,null,null,null,null,576,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_2411":[null,null,null,null,null,null,null,null,null,null,null,568,null,null,null,null,null],
+  "MP_MODAL_0210":[null,null,null,null,null,null,null,null,null,null,568,null,null,null,null,null,null],
+  "T2_ML_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,565,null],
+  "MP_MODAL_NMMAIS_010126":[null,null,null,null,null,null,null,null,null,null,null,null,null,565,null,null,null],
+  "MP_PUSH_0306":[null,null,null,null,null,null,562,null,null,null,null,null,null,null,null,null,null],
+  "ML_ELDO_20_1":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,560,null,null],
+  "MP_PUSH_1110":[null,null,null,null,null,null,null,null,null,null,557,null,null,null,null,null,null],
+  "MP_MODAL_70OFF_260202":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,554,null,null],
+  "MP_MODAL_MMAIS_0707":[null,null,null,null,null,null,null,552,null,null,null,null,null,null,null,null,null],
+  "AYUDAS_ASSISTIDAS":[64,170,184,120,2,1,null,null,null,null,null,null,null,null,null,null,null],
+  "TV_QRCODE200425":[null,null,null,null,539,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MICRO_2910":[null,null,null,null,null,null,null,null,null,null,534,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_2608":[null,null,null,null,null,null,null,null,534,null,null,null,null,null,null,null,null],
+  "MP_MODAL_70OFF_260212":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,531,null,null],
+  "PUSH_ML_290925":[null,null,null,null,null,null,null,null,null,475,49,null,null,null,null,null,null],
+  "MP_MODAL_35OFF_2805":[null,null,null,null,null,521,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_1601_TCAQUISELD50":[null,508,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "JOURNEY_SA_ENCENDIDO":[null,null,null,null,null,null,null,null,null,null,65,99,63,67,82,83,48],
+  "MP_MODAL_2705":[null,null,null,null,null,501,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_35OFF_060126":[null,null,null,null,null,null,null,null,null,null,null,null,null,499,null,null,null],
+  "MP_MMAIS_2905":[null,null,null,null,null,493,null,null,null,null,null,null,null,null,null,null,null],
+  "T5_ML_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,491,null],
+  "MS_0501_ANITTA_BENEFITS_PRESCORED":[null,null,null,null,null,486,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_1902":[null,null,486,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MMAIS_1404":[null,null,null,null,485,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_ELDO_20_1":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,482,null,null],
+  "ML_PUSH_70OFF_070126":[null,null,null,null,null,null,null,null,null,null,null,null,null,474,null,null,null],
+  "ML_50_ABR_BAU":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,472],
+  "PUSH_MMAIS_ML_2904":[null,null,null,null,420,49,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_250925":[null,null,null,null,null,null,null,null,null,466,null,null,null,null,null,null,null],
+  "ML_ELDO_70_1":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,463,null,null],
+  "MP_MODAL_50OFF_2805":[null,null,null,null,null,462,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_0412":[null,null,null,null,null,null,null,null,null,null,null,null,461,null,null,null,null],
+  "MODAL_2103_C50":[null,null,null,459,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MP_0304":[null,null,null,null,459,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_35OFF_1205":[null,null,null,null,null,459,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_200126":[null,null,null,null,null,null,null,null,null,null,null,null,null,457,null,null,null],
+  "ML_PUSH_50OFF_1808":[null,null,null,null,null,null,null,null,457,null,null,null,null,null,null,null,null],
+  "ML_PUSH_FLOWS_2611":[null,null,null,null,null,null,null,null,null,null,null,449,6,null,null,null,null],
+  "ML_PUSH_35OFF_1509":[null,null,null,null,null,null,null,null,null,454,null,null,null,null,null,null,null],
+  "T1_ML_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,454,null],
+  "PUSH_MP_MMAIS_TCPDC":[445,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_3011":[null,null,null,null,null,null,null,null,null,null,null,351,93,null,null,null,null],
+  "MP_EDC_MSHUB_HIBRIDO":[null,null,null,null,null,null,null,null,null,223,219,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_060126":[null,null,null,null,null,null,null,null,null,null,null,null,null,439,null,null,null],
+  "ML_PUSH_70OFF_1011":[null,null,null,null,null,null,null,null,null,null,null,437,null,null,null,null,null],
+  "MODAL_GTM_SAMSUNG_24X":[null,25,412,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MICRO_260324":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,435,null],
+  "T4_ML_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,430,null],
+  "PUSH_ML_1104":[null,null,null,null,430,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_35OFF_2209":[null,null,null,null,null,null,null,null,null,424,null,null,null,null,null,null,null],
+  "ENC-TP1":[18,403,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_50OFF_2006":[null,null,null,null,null,null,419,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_0309_B":[null,null,null,null,null,null,null,null,null,419,null,null,null,null,null,null,null],
+  "ML_PUSH_FLOWS_1911":[null,null,null,null,null,null,null,null,null,null,null,416,null,null,null,null,null],
+  "ONBOARDING_DRAWER_PILL_CASHBACK_MP_DISCOUNT_VERSION_MP":[null,null,null,5,50,84,34,25,17,23,22,32,24,28,29,26,14],
+  "MP_PUSH_50OFF_2005":[null,null,null,null,null,412,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_50OFF_1610":[null,null,null,null,null,null,null,null,null,null,411,null,null,null,null,null,null],
+  "MP_MODAL_35OFF_260416":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,411],
+  "ML_PUSH_NMMAIS_2411":[null,null,null,null,null,null,null,null,null,null,null,409,null,null,null,null,null],
+  "ML_PUSH_MMAIS_0511":[null,null,null,null,null,null,null,null,null,null,null,406,null,null,null,null,null],
+  "ML_PUSH_35OFF_260314":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,405,null],
+  "I-M-STOCK-FM0301-TCPD-MODAL":[null,403,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_DATADPUPLA_260328":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,401,null],
+  "MP_MODAL_70OFF_260311":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,394,null],
+  "ML_PUSH_MAON_1411":[null,null,null,null,null,null,null,null,null,null,null,394,null,null,null,null,null],
+  "MP_MODAL_50OFF_2006":[null,null,null,null,null,null,393,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_1806":[null,null,null,null,null,null,392,null,null,null,null,null,null,null,null,null,null],
+  "ML_50_ABR_BAU_MIN200":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,391],
+  "MODAL_1103_C70":[null,null,null,391,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSHML_TCAQUISICAO_1303":[null,null,null,390,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_1308":[null,null,null,null,null,null,null,null,379,null,null,null,null,null,null,null,null],
+  "MS_0150525_ANITTA_BENEFITS_ELDORADO":[null,null,null,null,null,378,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_ELDO_50_1":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,377,null,null],
+  "PUSH_MP_1402_C70":[null,null,377,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_2008":[null,null,null,null,null,null,null,null,374,null,null,null,null,null,null,null,null],
+  "ML_PUSH_50OFF_2409":[null,null,null,null,null,null,null,null,null,374,null,null,null,null,null,null,null],
+  "MP_PUSH_2711":[null,null,null,null,null,null,null,null,null,null,null,368,null,null,null,null,null],
+  "MODAL_GTM_SEMANA_GAMER_MARCO":[null,null,null,363,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_1312":[null,null,null,null,null,null,null,null,null,null,null,null,363,null,null,null,null],
+  "T1_MP_35BAU_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,355],
+  "ML_PUSH_0410":[null,null,null,null,null,null,null,null,null,null,355,null,null,null,null,null,null],
+  "MP_MODAL_70OFF_1512":[null,null,null,null,null,null,null,null,null,null,null,null,353,null,null,null,null],
+  "ML_PUSH_50OFF_2708":[null,null,null,null,null,null,null,null,351,null,null,null,null,null,null,null,null],
+  "T3_ML_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,351,null],
+  "MP_MODAL_35OFF_1711":[null,null,null,null,null,null,null,null,null,null,null,348,null,null,null,null,null],
+  "ML_PUSH_INTEL_1311":[null,null,null,null,null,null,null,null,null,null,null,344,null,null,null,null,null],
+  "ML_PUSH_35OFF_1306":[null,null,null,null,null,null,344,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_2002_C70":[null,null,343,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MMAIS_TCPD1701":[null,343,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2911":[null,null,null,null,null,null,null,null,null,null,null,309,33,null,null,null,null],
+  "MP_PUSH_MICRO_2511":[null,null,null,null,null,null,null,null,null,null,null,342,null,null,null,null,null],
+  "MS_010525_ANITTA_BENEFITS_ELDORADO":[null,null,null,null,null,338,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_1807":[null,null,null,null,null,null,null,338,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_0207":[null,null,null,null,null,null,null,337,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MAR_ABERTO_260327":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,336,null],
+  "PUSH_1701_TCAQUIMMAS1":[null,336,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "CONGRATS_DINERO_EXPRESS":[3,19,19,26,18,36,37,18,10,28,10,8,15,38,15,22,13],
+  "MP_MODAL_35OFF_260311":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,334,null],
+  "MP_MODAL_50OFF_1206":[null,null,null,null,null,null,332,null,null,null,null,null,null,null,null,null,null],
+  "ML_MMAIS_2105":[null,null,null,null,null,331,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2211":[null,null,null,null,null,null,null,null,null,null,null,330,null,null,null,null,null],
+  "MP_PUSH_MODAL_C_1211":[null,null,null,null,null,null,null,null,null,null,null,329,null,null,null,null,null],
+  "ML_PUSH_FLOWS_2811":[null,null,null,null,null,null,null,null,null,null,null,308,17,null,null,null,null],
+  "PUSH_MP_UPSELL_MELIMAS":[null,325,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_ELDO_20_3":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,324,null,null],
+  "MP_PUSH_MAON_1012":[null,null,null,null,null,null,null,null,null,null,null,null,318,null,null,null,null],
+  "ML_50_ABR_BAU_SEMCE":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,317],
+  "PUSH_ML_TST18X":[317,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_50OFF_1010":[null,null,null,null,null,null,null,null,null,null,315,null,null,null,null,null,null],
+  "MP_PUSH_MAON_070126":[null,null,null,null,null,null,null,null,null,null,null,null,null,315,null,null,null],
+  "MP_PUSH_120126":[null,null,null,null,null,null,null,null,null,null,null,null,null,314,null,null,null],
+  "MP_35OFF_0905":[null,null,null,null,null,313,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_3011":[null,null,null,null,null,null,null,null,null,null,null,256,57,null,null,null,null],
+  "ML_PUSH_35OFF_140126":[null,null,null,null,null,null,null,null,null,null,null,null,null,313,null,null,null],
+  "MP_PUSH_50OFF_1606":[null,null,null,null,null,null,312,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_TCAQUISICAO_1802":[null,null,310,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_BBB_26_TV_1601":[null,null,null,null,null,null,null,null,null,null,null,null,null,309,null,null,null],
+  "T2_ML_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,309,null],
+  "MP_PUSH_MAR_ABERTO_260318":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,304,null],
+  "MAIL_VALUE_PROP":[null,null,null,null,null,null,null,null,null,null,32,38,59,30,57,59,29],
+  "PUSH_ML_2504":[null,null,null,null,302,null,null,null,null,null,null,null,null,null,null,null,null],
+  "KYC_RECOVERED_CREDIT_CARD":[null,null,null,1,14,16,null,6,15,139,54,15,6,18,11,5,2],
+  "MP_PUSH_0911":[null,null,null,null,null,null,null,null,null,null,null,301,null,null,null,null,null],
+  "PUSH_GTM_INTEL_21X_MARCO":[null,null,null,300,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_0309_A":[null,null,null,null,null,null,null,null,null,298,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_1306_2":[null,null,null,null,null,null,296,null,null,null,null,null,null,null,null,null,null],
+  "MP_FT_1305":[null,null,null,null,null,295,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_1709":[null,null,null,null,null,null,null,null,null,294,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_1109":[null,null,null,null,null,null,null,null,null,292,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_1806":[null,null,null,null,null,null,291,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_1808":[null,null,null,null,null,null,null,null,290,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP":[null,null,null,null,null,null,null,null,276,8,5,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_0711":[null,null,null,null,null,null,null,null,null,null,null,286,null,null,null,null,null],
+  "ML_ELDO_70_3":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,285,null,null],
+  "ML_PUSH_MAON_0812":[null,null,null,null,null,null,null,null,null,null,null,null,282,null,null,null,null],
+  "MP_PUSHB_1205":[null,null,null,null,null,281,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_0708":[null,null,null,null,null,null,null,null,281,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_2307":[null,null,null,null,null,null,null,280,null,null,null,null,null,null,null,null,null],
+  "PUSH_MP_1803_C70":[null,null,null,276,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "QA-HOME-ML":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,276],
+  "MS_0425_BENEFITS_ELDORADO":[null,null,null,null,273,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_0407":[null,null,null,null,null,null,null,271,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_ONLYNAV_1208":[null,null,null,null,null,null,null,null,271,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MMAIS_2208":[null,null,null,null,null,null,null,null,269,null,null,null,null,null,null,null,null],
+  "MP_PUSH_0605":[null,null,null,null,null,268,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_2110":[null,null,null,null,null,null,null,null,null,null,265,null,null,null,null,null,null],
+  "MP_PUSH_MAON_1411":[null,null,null,null,null,null,null,null,null,null,null,260,null,null,null,null,null],
+  "MP_50OFF_0905":[null,null,null,null,null,259,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_ELDO_70_3":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,252,1,null],
+  "MAXWELL_SRT":[null,null,null,null,null,null,null,null,null,null,null,null,null,98,74,57,24],
+  "MP_PUSH_MAON_1712":[null,null,null,null,null,null,null,null,null,null,null,null,251,null,null,null,null],
+  "MP_MODAL_70OFF_120126":[null,null,null,null,null,null,null,null,null,null,null,null,null,250,null,null,null],
+  "MP_PUSH_70OFF_260314":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,249,null],
+  "TESTE_2606_OPENS_MP_ML":[null,null,null,null,null,null,182,67,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_70OFF_220126":[null,null,null,null,null,null,null,null,null,null,null,null,null,245,null,null,null],
+  "MP_PUSH_50OFF_2810":[null,null,null,null,null,null,null,null,null,null,244,null,null,null,null,null,null],
+  "TESTE_MAIO_WHATSAPP":[null,null,null,null,null,143,92,5,3,1,null,null,null,null,null,null,null],
+  "PUSH_MMAIS_3004":[null,null,null,null,201,43,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MMAIS_2309":[null,null,null,null,null,null,null,null,null,244,null,null,null,null,null,null,null],
+  "MP_DRAWER_LOYALTY":[null,null,35,12,29,90,15,5,4,null,null,27,25,null,null,null,null],
+  "PUSH_ML_2402_C70":[null,null,242,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_0705":[null,null,null,null,null,240,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1211":[null,null,null,null,null,null,null,null,null,null,null,240,null,null,null,null,null],
+  "WPP_ONLYNAV_1308":[null,null,null,null,null,null,null,null,177,49,null,1,null,null,13,null,null],
+  "PUSH_MP_CHECKOUT_MELIMAS":[52,169,16,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_ELD_70_260306":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,237,null],
+  "ML_PUSH_2811":[null,null,null,null,null,null,null,null,null,null,null,235,null,null,null,null,null],
+  "MS_0425_BENEFITS_PRESCORED":[null,null,null,null,234,null,null,null,null,null,null,null,null,null,null,null,null],
+  "T1_MP_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,233,null],
+  "MODAL_0904":[null,null,null,null,232,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_ELDO_2008":[null,null,null,null,null,null,null,null,231,null,null,null,null,null,null,null,null],
+  "MP_EMAIL_1111":[null,null,null,null,null,null,null,null,null,null,null,229,2,null,null,null,null],
+  "T3_ML_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,230,null],
+  "MS_0150525_ANITTA_BENEFITS_ELDORADO35":[null,null,null,null,null,229,null,null,null,null,null,null,null,null,null,null,null],
+  "HUB_MP_0702_C50":[null,null,229,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "T1_ML_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,227,null],
+  "PUSH_MP_2603_C50":[null,null,null,227,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_FT_1405":[null,null,null,null,null,227,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_INTEL_2411":[null,null,null,null,null,null,null,null,null,null,null,227,null,null,null,null,null],
+  "ML_PUSH_MAON_2111":[null,null,null,null,null,null,null,null,null,null,null,225,null,null,null,null,null],
+  "ML_ELDO_20_2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,224,null,null],
+  "MP_PUSH_35OFF_2005":[null,null,null,null,null,220,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MMAIS_1711":[null,null,null,null,null,null,null,null,null,null,null,220,null,null,null,null,null],
+  "MP_MODAL_3_3_260226":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,220,null,null],
+  "WPP_GUPSHUP_1510_QSB":[null,null,null,null,null,null,null,null,null,null,215,2,null,1,null,null,null],
+  "T4_ML_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,218,null],
+  "MP_ELDO_20_3":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,218,null,null],
+  "CARTAOBOLETO_1604":[null,null,null,null,217,null,null,null,null,null,null,null,null,null,null,null,null],
+  "T5_ML_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,216,1],
+  "MP_PUSH_MMAIS_0307":[null,null,null,null,null,null,null,217,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2712":[null,null,null,null,null,null,null,null,null,null,null,null,216,null,null,null,null],
+  "ML_PUSH_ELD_35_260306":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,215,null],
+  "MP_PUSHA_1205":[null,null,null,null,null,215,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_2611":[null,null,null,null,null,null,null,null,null,null,null,213,null,null,null,null,null],
+  "MP_PUSH_MMAIS_0505":[null,null,null,null,null,212,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MMAIS_0710":[null,null,null,null,null,null,null,null,null,null,211,null,null,null,null,null,null],
+  "PUSH_MMAIS_TCPD1":[null,210,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_0606":[null,null,null,null,null,null,207,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_2402_FT":[null,null,206,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_1010":[null,null,null,null,null,null,null,null,null,null,204,null,null,null,null,null,null],
+  "ML_PUSH_MAON_130126":[null,null,null,null,null,null,null,null,null,null,null,null,null,204,null,null,null],
+  "MP_MMAIS_1505":[null,null,null,null,null,203,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1212":[null,null,null,null,null,null,null,null,null,null,null,null,203,null,null,null,null],
+  "ML_PUSH_35OFF_1011":[null,null,null,null,null,null,null,null,null,null,null,202,null,null,null,null,null],
+  "MP_SLOTVDP_POSTOS_0810":[null,null,null,null,null,null,null,null,null,null,155,7,17,8,6,7,null],
+  "MP_ELDO_50_3":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,199,null,null],
+  "MP_PUSH_70OFF_3006":[null,null,null,null,null,null,129,70,null,null,null,null,null,null,null,null,null],
+  "MODAL_2304":[null,null,null,null,197,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_70OFF_2506":[null,null,null,null,null,null,196,null,null,null,null,null,null,null,null,null,null],
+  "BRASILEIRAO_INAPP_040525":[null,null,null,null,null,195,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_ELDO_70_2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,195,null,null],
+  "ML_PUSH_NMMAIS_1311":[null,null,null,null,null,null,null,null,null,null,null,194,null,null,null,null,null],
+  "WPP_GUPSHUP_0909_QSB":[null,null,null,null,null,null,null,null,null,194,null,null,null,null,null,null,null],
+  "PUSH_MMAIS_ML_2404":[null,null,null,null,192,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_FULL_2501":[null,null,null,null,null,null,null,null,null,null,null,null,null,189,null,null,null],
+  "MP_PUSH_MMAIS_2306":[null,null,null,null,null,null,188,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_1809":[null,null,null,null,null,null,null,null,null,188,null,null,null,null,null,null,null],
+  "ML_PUSH_0110":[null,null,null,null,null,null,null,null,null,null,187,null,null,null,null,null,null],
+  "ML_PUSH_ONLYNAV_260212":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,186,null,null],
+  "PUSH_MP_1802_C70":[null,null,186,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "CREDIT_NUMERIC_SCORING_LEVERS":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,184],
+  "MP_ELDO_70_2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,183,null,null],
+  "ML_PUSH_35OFF_3012":[null,null,null,null,null,null,null,null,null,null,null,null,166,17,null,null,null],
+  "MS_0105_ANITTA_BENEFITS_NOPRESCORED":[null,null,null,null,null,180,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_1701_TCAQUIMMAS":[null,180,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_1206":[null,null,null,null,null,null,179,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_FT_2005":[null,null,null,null,null,179,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MODAL_A_2411":[null,null,null,null,null,null,null,null,null,null,null,179,null,null,null,null,null],
+  "MP_PUSHC_1205":[null,null,null,null,null,178,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MMAIS_TCPD2":[null,176,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MAON_2011":[null,null,null,null,null,null,null,null,null,null,null,176,null,null,null,null,null],
+  "T2_MP_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,173,null],
+  "ML_PUSH_NMMAIS_1512":[null,null,null,null,null,null,null,null,null,null,null,null,173,null,null,null,null],
+  "MP_PUSH_MODAL_B_2411":[null,null,null,null,null,null,null,null,null,null,null,173,null,null,null,null,null],
+  "ML_ELDO_50_2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,172,null,null],
+  "MP_HOME_NMMAIS_0112":[null,null,null,null,null,null,null,null,null,null,null,null,169,2,null,null,null],
+  "MP_PUSH_MODAL_B_1211":[null,null,null,null,null,null,null,null,null,null,null,171,null,null,null,null,null],
+  "ADS_CARNAVAL25":[null,null,102,68,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MMAIS_2005":[null,null,null,null,null,170,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MICRO_260224":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,170,null,null],
+  "MP_MODAL_20OFF_200126":[null,null,null,null,null,null,null,null,null,null,null,null,null,170,null,null,null],
+  "MP_PUSH_MICRO_260330_TEST_A":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,163,7],
+  "MP_SLOTVDP_99_0810":[null,null,null,null,null,null,null,null,null,null,148,7,3,6,5,null,null],
+  "UCR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,16,93,59],
+  "MP_PUSH_35OFF_260314":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,168,null],
+  "MP_PUSH_35OFF_1407":[null,null,null,null,null,null,null,167,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_70OFF_1407_B":[null,null,null,null,null,null,null,167,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_3004":[null,null,null,null,114,52,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_1710":[null,null,null,null,null,null,null,null,null,null,166,null,null,null,null,null,null],
+  "PUSH_MP_1003_C70":[null,null,null,166,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_50OFF_1905":[null,null,null,null,null,166,null,null,null,null,null,null,null,null,null,null,null],
+  "T5_MP_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,165,null],
+  "MP_PUSH_35OFF_1111":[null,null,null,null,null,null,null,null,null,null,null,164,null,null,null,null,null],
+  "MP_PUSH_MICRO_260213":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,164,null,null],
+  "MP_EDC_MSHUB_VISA":[null,null,null,null,null,null,null,null,null,26,138,null,null,null,null,null,null],
+  "MP_WPP_0110":[null,null,null,null,null,null,null,null,null,null,163,null,null,null,null,null,null],
+  "T2_MP_35BAU_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,163],
+  "MP_PUSH_FLOWS_1811":[null,null,null,null,null,null,null,null,null,null,null,162,null,null,null,null,null],
+  "MP_PUSH_35OFF_1905":[null,null,null,null,null,161,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2012":[null,null,null,null,null,null,null,null,null,null,null,null,160,null,null,null,null],
+  "MP_PUSH_35OFF_190126":[null,null,null,null,null,null,null,null,null,null,null,null,null,160,null,null,null],
+  "ML_ELDO_50_3":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,160,null,null],
+  "MP_PUSH_2410":[null,null,null,null,null,null,null,null,null,null,160,null,null,null,null,null,null],
+  "PUSH_0603_C70":[null,null,null,160,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_50OFF_0606":[null,null,null,null,null,null,158,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_0804":[null,null,null,null,158,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_0310_PTC":[null,null,null,null,null,null,null,null,null,null,157,null,null,null,null,null,null],
+  "MODAL_MMAIS_TCPD2301A":[null,156,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MMAIS_HOME_0112":[null,null,null,null,null,null,null,null,null,null,null,null,155,null,null,null,null],
+  "MP_PUSH_MMAIS_1607":[null,null,null,null,null,null,null,155,null,null,null,null,null,null,null,null,null],
+  "PUSH_ML_TSTCBK":[154,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_2009":[null,null,null,null,null,null,null,null,null,154,null,null,null,null,null,null,null],
+  "ML_PUSH_0911":[null,null,null,null,null,null,null,null,null,null,null,153,null,null,null,null,null],
+  "ML_PUSH_MMAIS_0412":[null,null,null,null,null,null,null,null,null,null,null,null,153,null,null,null,null],
+  "EMAIL_260225":[null,null,110,37,3,1,null,1,null,null,null,null,null,null,null,null,null],
+  "MP_ELDO_50_2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,152,null,null],
+  "MP_PUSH_MICRO_2501":[null,null,null,null,null,null,null,null,null,null,null,null,null,151,null,null,null],
+  "MP_PUSH_70OFF_1111":[null,null,null,null,null,null,null,null,null,null,null,150,null,null,null,null,null],
+  "MP_PUSH_160126":[null,null,null,null,null,null,null,null,null,null,null,null,null,150,null,null,null],
+  "MP_PUSH_70OFF_260311":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,150,null],
+  "ML_PUSH_35OFF_200126":[null,null,null,null,null,null,null,null,null,null,null,null,null,149,null,null,null],
+  "EMAIL_250425":[null,null,null,null,118,29,1,null,null,null,null,null,null,null,null,null,null],
+  "T1_MP_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,146,null],
+  "MP_HUB_70OFF":[null,null,null,null,null,null,21,124,null,null,null,null,null,null,null,null,null],
+  "LIMITE":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,81,null,63],
+  "MP_PUSH_NMMAIS_080126":[null,null,null,null,null,null,null,null,null,null,null,null,null,143,null,null,null],
+  "ML_PUSH_70OFF_1212":[null,null,null,null,null,null,null,null,null,null,null,null,142,null,null,null,null],
+  "PUSH_GTM_SAMSUNG_24X":[null,48,94,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_SLOTVDP_MEQUI_0810":[null,null,null,null,null,null,null,null,null,null,137,1,3,1,null,null,null],
+  "LOJINHAANITTA":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,142,null,null],
+  "ML_PUSH_35OFF_2811":[null,null,null,null,null,null,null,null,null,null,null,141,null,null,null,null,null],
+  "MP_ELDO_20_2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,140,null,null],
+  "MP_MODAL_50OFFSEMCE_260416":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,140],
+  "MP_PUSH_MODAL_A_1211":[null,null,null,null,null,null,null,null,null,null,null,139,null,null,null,null,null],
+  "ENC-TP2":[null,29,28,51,3,26,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MAON_2310_A":[null,null,null,null,null,null,null,null,null,null,135,null,null,null,null,null,null],
+  "MP_PUSH_MAON_2310_B":[null,null,null,null,null,null,null,null,null,null,134,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_260311":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,133,null],
+  "ML_PUSH_FT_0311":[null,null,null,null,null,null,null,null,null,null,null,133,null,null,null,null,null],
+  "PUSH_MP_FLOWS_LP_EDC_PEDIR_TC_POM":[4,null,null,8,11,13,4,14,17,10,21,14,7,2,2,3,3],
+  "MP_CALDEIRAODOMION_1110":[null,null,null,null,null,null,null,null,null,null,130,2,null,null,null,1,null],
+  "ELDORADO":[null,null,129,3,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "T2_MP_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,131,null],
+  "PUSHML_TCAQUISICAO_2003":[null,null,null,130,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_18X_1908":[null,null,null,null,null,null,null,null,130,null,null,null,null,null,null,null,null],
+  "ML_PUSH_TV_2210":[null,null,null,null,null,null,null,null,null,null,130,null,null,null,null,null,null],
+  "CARTAOBOLETO_1503":[null,null,null,128,2,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MMAIS_TCPD1701A":[null,130,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_INTEL_1411":[null,null,null,null,null,null,null,null,null,null,null,130,null,null,null,null,null],
+  "MP_PUSH_2210":[null,null,null,null,null,null,null,null,null,null,129,null,null,null,null,null,null],
+  "MP_PUSH_MAON_2310_C":[null,null,null,null,null,null,null,null,null,null,129,null,null,null,null,null,null],
+  "MODAL_MMAIS_TCPD2301B":[null,129,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_1212":[null,null,null,null,null,null,null,null,null,null,null,null,128,null,null,null,null],
+  "MP_PUSH_MMAIS_2506":[null,null,null,null,null,null,128,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_21X_1908":[null,null,null,null,null,null,null,null,128,null,null,null,null,null,null,null,null],
+  "MP_PUSH_70OFF_0407":[null,null,null,null,null,null,null,127,null,null,null,null,null,null,null,null,null],
+  "T1_MP_50BAU_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,126],
+  "MP_PUSH_50OFF_2508":[null,null,null,null,null,null,null,null,126,null,null,null,null,null,null,null,null],
+  "MP_MMAIS_2305":[null,null,null,null,null,126,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2701":[null,null,null,null,null,null,null,null,null,null,null,null,null,125,null,null,null],
+  "MP_PUSH_MICRO_260330_TEST_B":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,112,12],
+  "MP_PUSH_MMAIS_2010":[null,null,null,null,null,null,null,null,null,null,124,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_260126":[null,null,null,null,null,null,null,null,null,null,null,null,null,122,null,null,null],
+  "ADS_TCAQUISICAO_0703":[null,null,null,122,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MAIL_PREAVISO_LOYALTY":[null,69,50,1,null,null,null,1,null,null,null,null,null,null,null,1,null],
+  "MP_PUSH_35OFF_0311":[null,null,null,null,null,null,null,null,null,null,null,121,null,null,null,null,null],
+  "ML_PUSH_3_3_260227":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,107,11,null],
+  "ML_PUSH_FT_1211":[null,null,null,null,null,null,null,null,null,null,null,118,null,null,null,null,null],
+  "MP_PUSH_50OFF_2108":[null,null,null,null,null,null,null,null,117,null,null,null,null,null,null,null,null],
+  "EMAIL_RECOVER_KYC":[null,null,null,null,4,2,1,1,6,45,21,13,9,9,1,4,1],
+  "MP_SOCIAL_JULHO":[null,null,null,null,null,null,null,117,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_3110":[null,null,null,null,null,null,null,null,null,null,65,49,null,null,null,null,null],
+  "SMBS_CASHBACK_0126":[null,null,null,null,null,null,null,null,null,null,null,null,null,108,6,null,null],
+  "PUSH_FLOWS_REMARKETING":[null,null,null,null,null,null,null,null,null,null,31,37,29,12,4,null,null],
+  "PUSH_MP_MMAIS_3103":[null,null,null,79,34,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_FLOWS_2411":[null,null,null,null,null,null,null,null,null,null,null,110,3,null,null,null,null],
+  "T4_MP_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,112,null],
+  "T1_MP_50BAU_SEMCE_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,111],
+  "MS_0425_ANITTA_BENEFITS_NOPRESCORED":[null,null,null,null,111,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MMAIS_1112":[null,null,null,null,null,null,null,null,null,null,null,null,109,null,null,null,null],
+  "MODAL_1802_FT":[null,null,109,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "T1_MP_50BAU_SEMCE_MIN200_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,106],
+  "MP_HUB_35OFF_0107":[null,null,null,null,null,null,null,106,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_2811":[null,null,null,null,null,null,null,null,null,null,null,104,null,null,null,null,null],
+  "MP_PUSH_50OFF_2010":[null,null,null,null,null,null,null,null,null,null,104,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_050126":[null,null,null,null,null,null,null,null,null,null,null,null,null,103,null,null,null],
+  "PUSH_MMAIS_TCPD2201C":[null,103,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_70OFF_060126":[null,null,null,null,null,null,null,null,null,null,null,null,null,102,null,null,null],
+  "PUSH_ML_2002_C70":[null,null,101,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_2008":[null,null,null,null,null,null,null,null,101,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_0812":[null,null,null,null,null,null,null,null,null,null,null,null,101,null,null,null,null],
+  "T3_MP_70_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,101,null],
+  "MP_PUSH_2910":[null,null,null,null,null,null,null,null,null,null,100,null,null,null,null,null,null],
+  "PUSH_MP_MMAIS_TCPDD":[100,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "HUB_MP_1402_C70":[null,null,100,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_150126":[null,null,null,null,null,null,null,null,null,null,null,null,null,100,null,null,null],
+  "PUSH_MP_2802_C70":[null,null,70,29,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "SOCIAL":[null,null,null,null,null,null,null,null,null,12,81,1,3,1,1,null,null],
+  "MP_MODAL_35OFF_260317":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,99,null],
+  "MP_PUSH_0807":[null,null,null,null,null,null,null,98,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MAON_1912":[null,null,null,null,null,null,null,null,null,null,null,null,98,null,null,null,null],
+  "T5_MP_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,95,2],
+  "MP_MODAL_50OFFBAU_260416":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,97],
+  "ML_PUSH_MAON_2310_D":[null,null,null,null,null,null,null,null,null,null,97,null,null,null,null,null,null],
+  "ML_PUSH_MMAIS_0406":[null,null,null,null,null,null,96,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_MMAIS_TCPD2301C":[null,96,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MARABERTO_0210":[null,null,null,null,null,null,null,null,null,null,96,null,null,null,null,null,null],
+  "MP_PUSH_INTEL_2511":[null,null,null,null,null,null,null,null,null,null,null,95,null,null,null,null,null],
+  "T3_MP_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,95,null],
+  "MP_PUSH_70OFF_1112":[null,null,null,null,null,null,null,null,null,null,null,null,95,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250912_STK_NCU_ATV_REGISTRADOS":[null,null,null,null,null,null,null,null,null,91,4,null,null,null,null,null,null],
+  "MP_MODAL_ONLYNAV_1508":[null,null,null,null,null,null,null,null,95,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_1510_INAT":[null,null,null,null,null,null,null,null,null,null,92,2,null,null,1,null,null],
+  "ML_PUSH_NMMAIS_0412":[null,null,null,null,null,null,null,null,null,null,null,null,95,null,null,null,null],
+  "ML_PUSH_35OFF_2212":[null,null,null,null,null,null,null,null,null,null,null,null,94,null,null,null,null],
+  "MP_PUSH_50OFF_2509":[null,null,null,null,null,null,null,null,null,93,null,null,null,null,null,null,null],
+  "SLOT_MP_1702_C70":[null,null,93,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_0411":[null,null,null,null,null,null,null,null,null,null,null,92,null,null,null,null,null],
+  "PUSH_MP_SEMOFERTA_260203":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,90,null,null],
+  "ENC-TP3":[14,17,13,45,1,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_50OFF_2209":[null,null,null,null,null,null,null,null,null,89,null,null,null,null,null,null,null],
+  "GTM_MODAL_QUINTA_ML":[null,null,null,null,null,89,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_MAON_2310_C":[null,null,null,null,null,null,null,null,null,null,89,null,null,null,null,null,null],
+  "ML_PUSH_70OFF_2912":[null,null,null,null,null,null,null,null,null,null,null,null,87,1,null,null,null],
+  "MP_PUSH_MARABERTO_0110":[null,null,null,null,null,null,null,null,null,null,87,null,null,null,null,null,null],
+  "MP_MODAL_ONLYNAV_260223":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,86,null,null],
+  "PORTABILITY_HUB":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,6,79],
+  "ML_PUSH_NMMAIS_1012":[null,null,null,null,null,null,null,null,null,null,null,null,84,null,null,null,null],
+  "MP_PUSH_35OFF_1512":[null,null,null,null,null,null,null,null,null,null,null,null,84,null,null,null,null],
+  "HUB_0703_C70":[null,null,null,84,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_HUB_PROMOVISA_0311":[null,null,null,null,null,null,null,null,null,null,null,83,null,null,null,null,null],
+  "MP_HUB_70OFF_0311":[null,null,null,null,null,null,null,null,null,null,null,83,null,null,null,null,null],
+  "MP_PUSH_50OFF_0910":[null,null,null,null,null,null,null,null,null,null,82,null,null,null,null,null,null],
+  "PUSH_2504":[null,null,null,null,82,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_0610":[null,null,null,null,null,null,null,null,null,null,82,null,null,null,null,null,null],
+  "CX_SOLICITUD_SIN_OFERTA":[3,12,7,15,9,5,3,9,11,4,3,null,null,null,null,null,null],
+  "PUSH_MP_MMAIS_2603":[null,null,null,81,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_2701":[null,null,null,null,null,null,null,null,null,null,null,null,null,81,null,null,null],
+  "MP_PUSH_ELD_70BAU_260226":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,79,2,null],
+  "BANNER_ML_LP_TC":[null,null,null,null,null,null,80,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_FLOWS_2711":[null,null,null,null,null,null,null,null,null,null,null,77,1,null,null,null,null],
+  "PUSH_MP_0702_C50":[null,null,77,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_1104":[null,null,null,null,75,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_B_2710":[null,null,null,null,null,null,null,null,null,null,75,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_1212":[null,null,null,null,null,null,null,null,null,null,null,null,75,null,null,null,null],
+  "MP_EDC":[null,null,null,null,null,null,null,null,null,75,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_120126":[null,null,null,null,null,null,null,null,null,null,null,null,null,74,null,null,null],
+  "MP_MODAL_70OFF_260317":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,74,null],
+  "ML_PUSH_MAON_2310_A":[null,null,null,null,null,null,null,null,null,null,73,null,null,null,null,null,null],
+  "ML_PUSH_NMMAIS_3012_B":[null,null,null,null,null,null,null,null,null,null,null,null,61,12,null,null,null],
+  "MODAL_140125_I-M-STOCK-FM1301-ELDORADO":[null,72,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "T3_MP_35BAU_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,72],
+  "MP_PUSH_FLOWS_2811":[null,null,null,null,null,null,null,null,null,null,null,69,3,null,null,null,null],
+  "MP_PUSH_50OFF_1510":[null,null,null,null,null,null,null,null,null,null,71,null,null,null,null,null,null],
+  "MP_MODAL_50OFFSEMCE_MIN200_260416":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,71],
+  "MP_PUSH_50OFF_0909":[null,null,null,null,null,null,null,null,null,70,null,null,null,null,null,null,null],
+  "ML_PUSH_FT_3005":[null,null,null,null,null,62,8,null,null,null,null,null,null,null,null,null,null],
+  "VDP_1003_C70":[null,null,null,69,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_0910":[null,null,null,null,null,null,null,null,null,null,69,null,null,null,null,null,null],
+  "MP_PUSH_70OFF_270126":[null,null,null,null,null,null,null,null,null,null,null,null,null,69,null,null,null],
+  "MP_PUSH_MMAIS_1911":[null,null,null,null,null,null,null,null,null,null,null,69,null,null,null,null,null],
+  "MODAL_MP_MMAIS_2504":[null,null,null,null,69,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MODAL_1403_FT":[null,null,null,69,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_CALDEIRAODOMION_2211":[null,null,null,null,null,null,null,null,null,null,null,63,3,null,null,null,1],
+  "MP_HUB_MMAIS_0311":[null,null,null,null,null,null,null,null,null,null,null,67,null,null,null,null,null],
+  "PUSH_MP_SEMOFERTA_260128":[null,null,null,null,null,null,null,null,null,null,null,null,null,67,null,null,null],
+  "PUSH_ML_2003_FT":[null,null,null,66,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_MMAIS_C_2710":[null,null,null,null,null,null,null,null,null,null,66,null,null,null,null,null,null],
+  "XSELL__NEWBIES_MP_BBB":[null,null,null,null,null,null,null,null,null,null,null,null,null,8,58,null,null],
+  "ML_PUSH_20OFF_270126%20MERCADOPAGO%3A%2F%2FWEBVIEW%3FURL%3DHTTPS%3A%2F%2FAPI.MERCADOPAGO.COM%2FV2%2FDISCOUNTS%2FCAMPAIGN%2F12850032%2FTERMS%2FHTML":[null,null,null,null,null,null,null,null,null,null,null,null,null,66,null,null,null],
+  "MP_MODAL_NMMAIS_2212_B":[null,null,null,null,null,null,null,null,null,null,null,null,66,null,null,null,null],
+  "ML_PUSH_MMAIS_280126":[null,null,null,null,null,null,null,null,null,null,null,null,null,65,null,null,null],
+  "ML_MMAIS_2905":[null,null,null,null,null,65,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_70OFF_1407_A":[null,null,null,null,null,null,null,64,null,null,null,null,null,null,null,null,null],
+  "PUSH_MP_MMAIS_TCPDB":[64,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_FT_2605":[null,null,null,null,null,64,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_0912":[null,null,null,null,null,null,null,null,null,null,null,null,64,null,null,null,null],
+  "PUSH_MP_MMAIS_TCPDA":[64,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_1912":[null,null,null,null,null,null,null,null,null,null,null,null,63,null,null,null,null],
+  "T4_MP_35_MAR_SPR2":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,62,null],
+  "MP_HUB_35OFF":[null,null,null,null,null,null,62,null,null,null,null,null,null,null,null,null,null],
+  "SCORING_REAL_TIME_MP_HOME_EDC_BANNER":[4,42,6,6,3,null,null,null,null,null,null,null,null,null,null,null,null],
+  "T2_MP_50BAU_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,61],
+  "MP_WRAPUP":[null,null,null,null,null,null,null,null,null,null,null,null,60,null,null,null,null],
+  "T2_MP_50BAU_SEMCE_MIN200_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,60],
+  "PUSH_1601_TCAQUISELD150":[null,58,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_FT_2605":[null,null,null,null,null,58,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_FT_3005":[null,null,null,null,null,57,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_EMAIL_1011":[null,null,null,null,null,null,null,null,null,null,null,55,null,null,null,null,null],
+  "FM0502_LOJA_ANITTA":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,55,null,null],
+  "ML_PUSH_FT_0911":[null,null,null,null,null,null,null,null,null,null,null,55,null,null,null,null,null],
+  "MP_MODAL_MMAIS_A_2710":[null,null,null,null,null,null,null,null,null,null,55,null,null,null,null,null,null],
+  "PUSH_ML_1703_FT":[null,null,null,54,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_ONLY_NAV_260313":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,54,null],
+  "EMAIL_TESTE_JUNHO_ML":[null,null,null,null,null,null,53,1,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_FT_0611":[null,null,null,null,null,null,null,null,null,null,null,53,null,null,null,null,null],
+  "SCORING_REAL_TIME_MP_HOME_ANITTA":[null,null,null,null,6,10,8,12,12,3,1,null,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_ML_QMC":[null,null,null,null,null,null,null,null,null,null,50,2,null,null,null,null,null],
+  "WPP_GUPSHUP_1510_TDA":[null,null,null,null,null,null,null,null,null,null,52,null,null,null,null,null,null],
+  "MP_HUB_50OFF":[null,null,null,null,null,null,52,null,null,null,null,null,null,null,null,null,null],
+  "GTM_PUSH_QUINTA_ML":[null,null,null,null,null,51,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_020126":[null,null,null,null,null,null,null,null,null,null,null,null,null,51,null,null,null],
+  "T2_MP_50BAU_SEMCE_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,50],
+  "WPP_GUPSHUP_0909_D2_QSB":[null,null,null,null,null,null,null,null,null,48,1,1,null,null,null,null,null],
+  "PUSH_MP_1702_FT":[null,null,49,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_20OFF_1211":[null,null,null,null,null,null,null,null,null,null,null,49,null,null,null,null,null],
+  "MP_EDC_0609":[null,null,null,null,null,null,null,null,null,49,null,null,null,null,null,null,null],
+  "MP_PUSH_ONLYNAV_2108":[null,null,null,null,null,null,null,null,48,null,null,null,null,null,null,null,null],
+  "PUSH_ML_2402_GCFT":[null,null,48,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_ELD_35_260303":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,47,null],
+  "MS_0425_BENEFITS_NOPRESCORED":[null,null,null,null,46,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_50OFF_1209":[null,null,null,null,null,null,null,null,null,46,null,null,null,null,null,null,null],
+  "PUSH_GTM_SEMANA_GAMER_MARCO":[null,null,null,42,3,null,null,null,null,null,null,null,null,null,null,null,null],
+  "EDC_2309%3F":[null,null,null,null,null,null,null,null,null,45,null,null,null,null,null,null,null],
+  "PUSH_MM_2804":[null,null,null,null,45,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_TV_SETEMBRO":[null,null,null,null,null,null,null,null,null,44,null,null,null,null,null,null,null],
+  "PUSH_MP_1402_FT":[null,null,44,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_ML_QMC":[null,null,null,null,null,null,null,null,null,null,null,43,1,null,null,null,null],
+  "ML_PUSH_FT_1306":[null,null,null,null,null,null,44,null,null,null,null,null,null,null,null,null,null],
+  "XXXXX":[null,30,13,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_35OFF_1812":[null,null,null,null,null,null,null,null,null,null,null,null,42,null,null,null,null],
+  "ML_PUSH_20OFF_1510":[null,null,null,null,null,null,null,null,null,null,42,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_2711":[null,null,null,null,null,null,null,null,null,null,null,42,null,null,null,null,null],
+  "VERDI_ML":[null,null,null,null,null,null,null,null,null,null,3,9,7,4,8,9,2],
+  "MP_HUB_NMMAIS_0112":[null,null,null,null,null,null,null,null,null,null,null,null,41,null,null,null,null],
+  "MP_MM_1305":[null,null,null,null,null,41,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_MODAL_NMMAIS_2212":[null,null,null,null,null,null,null,null,null,null,null,null,41,null,null,null,null],
+  "ML_PUSH_MMAIS_1712_B":[null,null,null,null,null,null,null,null,null,null,null,null,41,null,null,null,null],
+  "MP_PUSH_FLOWS_2111":[null,null,null,null,null,null,null,null,null,null,null,40,null,null,null,null,null],
+  "MP_PUSH_35OFF_1209":[null,null,null,null,null,null,null,null,null,40,null,null,null,null,null,null,null],
+  "MP_EMAIL_2811":[null,null,null,null,null,null,null,null,null,null,null,37,3,null,null,null,null],
+  "ML_PUSH_FT_2811":[null,null,null,null,null,null,null,null,null,null,null,38,1,null,null,null,null],
+  "PUSH_ML_1403_FT":[null,null,null,39,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_1404":[null,null,null,null,39,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_70OFF_0812":[null,null,null,null,null,null,null,null,null,null,null,null,39,null,null,null,null],
+  "MP_PUSH_35OFF_2811":[null,null,null,null,null,null,null,null,null,null,null,39,null,null,null,null,null],
+  "MP_PUSH_2710":[null,null,null,null,null,null,null,null,null,null,38,null,null,null,null,null,null],
+  "EDC_LP%3F":[null,null,null,null,null,null,null,null,null,38,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_220126":[null,null,null,null,null,null,null,null,null,null,null,null,null,38,null,null,null],
+  "MP_PUSH_ONLYNAV_2508":[null,null,null,null,null,null,null,null,37,null,null,null,null,null,null,null,null],
+  "MP_HUB_35OFF_0311":[null,null,null,null,null,null,null,null,null,null,null,37,null,null,null,null,null],
+  "EMAIL_MICRO":[null,null,null,null,null,null,37,null,null,null,null,null,null,null,null,null,null],
+  "MP_CALDEIRAODOMION_190126":[null,null,null,null,null,null,null,null,null,null,null,null,null,36,null,null,null],
+  "T3_MP_50BAU_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,35],
+  "I-M-STOCK-FM0901-ELDORADO-2":[null,35,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1612_B":[null,null,null,null,null,null,null,null,null,null,null,null,35,null,null,null,null],
+  "SHORTCUT_MP_BBB":[null,null,null,null,null,null,null,null,null,null,null,null,null,14,21,null,null],
+  "MP_TV_OUTUBRO":[null,null,null,null,null,null,null,null,null,null,34,null,null,null,null,null,null],
+  "MP_EMAIL_0210":[null,null,null,null,null,null,null,null,null,null,33,null,null,null,null,null,null],
+  "FERRAMENTASGTM":[null,null,null,null,3,2,8,7,3,2,5,3,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_WPP_DML_NEG":[null,null,null,null,null,null,null,null,null,null,null,31,1,null,null,null,null],
+  "MP_MODAL_MMAIS_2312_B":[null,null,null,null,null,null,null,null,null,null,null,null,32,null,null,null,null],
+  "ML_PUSH_FT_2606":[null,null,null,null,null,null,32,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_2605_A":[null,null,null,null,null,32,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_WPP_FJ_NEGATIVO":[null,null,null,null,null,null,null,null,null,null,28,4,null,null,null,null,null],
+  "ML_PUSH_FT_3011":[null,null,null,null,null,null,null,null,null,null,null,20,11,null,null,null,null],
+  "WPP_GUPSHUP_0310_MJ":[null,null,null,null,null,null,null,null,null,null,30,null,null,null,null,null,null],
+  "MP_PUSH_35OFF_2605_B":[null,null,null,null,null,30,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_TV_AGOSTO":[null,null,null,null,null,null,null,null,30,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_1512":[null,null,null,null,null,null,null,null,null,null,null,null,30,null,null,null,null],
+  "MP_PUSH_NMMAIS_280126":[null,null,null,null,null,null,null,null,null,null,null,null,null,29,null,null,null],
+  "ML_PUSH_ANITTA_1111":[null,null,null,null,null,null,null,null,null,null,null,29,null,null,null,null,null],
+  "MP_PUSH_FT_1106":[null,null,null,null,null,null,29,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_0306":[null,null,null,null,null,null,29,null,null,null,null,null,null,null,null,null,null],
+  "MP_TV_JULHO":[null,null,null,null,null,null,null,21,8,null,null,null,null,null,null,null,null],
+  "ML_PUSH_FT_2411":[null,null,null,null,null,null,null,null,null,null,null,29,null,null,null,null,null],
+  "MP_CALDEIRAODOMION_2911":[null,null,null,null,null,null,null,null,null,null,null,25,2,null,1,null,null],
+  "MP_MODAL_50OFF_1512":[null,null,null,null,null,null,null,null,null,null,null,null,28,null,null,null,null],
+  "MP_PUSH_20OFF_0810":[null,null,null,null,null,null,null,null,null,null,28,null,null,null,null,null,null],
+  "ML_PUSH_MARABERTO_0110":[null,null,null,null,null,null,null,null,null,null,28,null,null,null,null,null,null],
+  "MP_PUSH_21XELDO_2008":[null,null,null,null,null,null,null,null,27,null,null,null,null,null,null,null,null],
+  "EDC_0210%3F":[null,null,null,null,null,null,null,null,null,null,27,null,null,null,null,null,null],
+  "EDC_1809%3F":[null,null,null,null,null,null,null,null,null,26,null,null,null,null,null,null,null],
+  "MP_TV_MAR26":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,25,1],
+  "MP_HUB_MMAIS_0112":[null,null,null,null,null,null,null,null,null,null,null,null,26,null,null,null,null],
+  "MP_MODAL_70OFF_3012":[null,null,null,null,null,null,null,null,null,null,null,null,23,2,null,null,null],
+  "PUSH_MP_MMAIS_2404":[null,null,null,null,25,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1912_B":[null,null,null,null,null,null,null,null,null,null,null,null,24,null,null,null,null],
+  "PUSH_MP_1303_FT":[null,null,null,24,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_2912_B":[null,null,null,null,null,null,null,null,null,null,null,null,24,null,null,null,null],
+  "MP_PUSH_MMAIS_0112":[null,null,null,null,null,null,null,null,null,null,null,null,23,null,null,null,null],
+  "WPP_GUPSHUP_3010_WPP_FJ_POSITIVO":[null,null,null,null,null,null,null,null,null,null,19,3,null,null,null,null,null],
+  "MP_CALDEIRAODOMION_2012":[null,null,null,null,null,null,null,null,null,null,null,null,22,null,null,null,null],
+  "ML_PUSH_NMMAIS_3012":[null,null,null,null,null,null,null,null,null,null,null,null,22,null,null,null,null],
+  "MP_MODAL_FT_1706":[null,null,null,null,null,null,21,null,null,null,null,null,null,null,null,null,null],
+  "MP_HOME_NMMAIS_0112_C":[null,null,null,null,null,null,null,null,null,null,null,null,19,2,null,null,null],
+  "T4_MP_50BAU_SEMCE_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,21],
+  "GAMESGTM":[null,null,null,null,null,4,2,3,2,4,3,1,1,null,null,null,null],
+  "T4_MP_50BAU_SEMCE_MIN200_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,20],
+  "PUSH_MP_2701":[null,19,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ELDORADO_SMBS_OUT":[null,null,null,null,null,null,null,null,null,null,18,1,null,null,null,null,null],
+  "MP_PUSH_20OFF_0511":[null,null,null,null,null,null,null,null,null,null,null,19,null,null,null,null,null],
+  "LIVE_ANITTA_MELIPLAY_0802":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,19,null,null],
+  "MP_MODAL_35OFF_2306":[null,null,null,null,null,null,19,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_3012_B":[null,null,null,null,null,null,null,null,null,null,null,null,15,3,null,null,null],
+  "MP_PUSH_S0_2305":[null,null,null,null,null,18,null,null,null,null,null,null,null,null,null,null,null],
+  "T3_MP_50BAU_SEMCE_MIN200_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,18],
+  "WPP_GUPSHUP_2711_C2_MP_QMC":[null,null,null,null,null,null,null,null,null,null,null,17,1,null,null,null,null],
+  "MP_MMAIS_HOME_0112_C":[null,null,null,null,null,null,null,null,null,null,null,null,14,4,null,null,null],
+  "AUTOPARTSGTM":[null,null,null,null,4,6,1,null,2,1,2,null,null,null,1,1,null],
+  "EDC_2509%3F":[null,null,null,null,null,null,null,null,null,16,1,null,null,null,null,null,null],
+  "ML_PUSH_FT_2111":[null,null,null,null,null,null,null,null,null,null,null,17,null,null,null,null,null],
+  "MP_HUB_NMMAIS_C_2110":[null,null,null,null,null,null,null,null,null,null,17,null,null,null,null,null,null],
+  "ML_PUSH_FT_1711":[null,null,null,null,null,null,null,null,null,null,null,17,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_ML_DML":[null,null,null,null,null,null,null,null,null,null,15,1,null,null,null,null,null],
+  "MP_EMAIL_ONLYNAV_2008":[null,null,null,null,null,null,null,null,16,null,null,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_1612":[null,null,null,null,null,null,null,null,null,null,null,null,16,null,null,null,null],
+  "PUSH_MP_2001_MICRO_WILL":[null,null,null,null,null,null,null,null,null,null,null,null,null,16,null,null,null],
+  "MP_PUSH_50OFF_2605_A":[null,null,null,null,null,16,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_HUB_NMMAIS_B_2110":[null,null,null,null,null,null,null,null,null,null,16,null,null,null,null,null,null],
+  "MP_MMAIS_HOME_0112_B":[null,null,null,null,null,null,null,null,null,null,null,null,14,2,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250917_STK_NCU_TC_NATIVADOS":[null,null,null,null,null,null,null,null,null,14,2,null,null,null,null,null,null],
+  "ENC-TP4":[6,9,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_EMAIL_ONLYNAV_260212":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,15,null,null],
+  "ON_HOLD":[null,null,null,null,1,3,2,1,4,1,2,null,1,null,null,null,null],
+  "WPP_GUPSHUP_3010_MP_INAT":[null,null,null,null,null,null,null,null,null,null,14,1,null,null,null,null,null],
+  "EDC_2309":[null,null,null,null,null,null,null,null,null,9,4,2,null,null,null,null,null],
+  "PUSH_MP_1803_FT":[null,null,null,14,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_%5BML%2FMP%5D_%5BCAMPAIGN%5D":[null,null,null,null,null,null,null,null,null,null,null,14,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250104_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,14,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251002_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,14,null,null,null,null,null,null],
+  "HUB_SELLER_BANNER":[14,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "POST_PAGO_MP_MELIMAS":[6,6,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_HUB_24X_1211":[null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null,null],
+  "FROM%3DMP_PUSH_3110":[null,null,null,null,null,null,null,null,null,null,9,4,null,null,null,null,null],
+  "T3_MP_50BAU_SEMCE_ABR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,13],
+  "WPP_GUPSHUP_3010_MP_DML":[null,null,null,null,null,null,null,null,null,null,10,3,null,null,null,null,null],
+  "MP_MODAL_MMAIS_2312":[null,null,null,null,null,null,null,null,null,null,null,null,13,null,null,null,null],
+  "MP_HUB_NMMAIS_A_2110":[null,null,null,null,null,null,null,null,null,null,12,null,null,null,null,null,null],
+  "MP_TV_NOVEMBRO":[null,null,null,null,null,null,null,null,null,null,null,10,2,null,null,null,null],
+  "GTM_PUSH_QUINTA_MP":[null,null,null,null,null,12,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PLACEMENTS_ONLYNAV_1508":[null,null,null,null,null,null,null,null,12,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_1510_ININ":[null,null,null,null,null,null,null,null,null,null,12,null,null,null,null,null,null],
+  "MP_EMAIL_2511":[null,null,null,null,null,null,null,null,null,null,null,11,1,null,null,null,null],
+  "ML_PUSH_MMAIS_2212_B":[null,null,null,null,null,null,null,null,null,null,null,null,11,null,null,null,null],
+  "PUSH_MMAIS_TCPD2201A":[null,11,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_3012":[null,null,null,null,null,null,null,null,null,null,null,null,11,null,null,null,null],
+  "WPP_GUPSHUP_3010_ML_INAT":[null,null,null,null,null,null,null,null,null,null,8,2,null,null,null,1,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251020_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,11,null,null,null,null,null,null],
+  "MP_PUSH_SAOPAULO_0210":[null,null,null,null,null,null,null,null,null,null,11,null,null,null,null,null,null],
+  "MP_HUB_20OFF_0311":[null,null,null,null,null,null,null,null,null,null,null,11,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251002_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,10,null,null,null,null,null,null],
+  "MP_HUB_MMAIS_0112_C":[null,null,null,null,null,null,null,null,null,null,null,null,10,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251030_STK_NCU_TC_PARTE_A":[null,null,null,null,null,null,null,null,null,null,9,1,null,null,null,null,null],
+  "CX_SOLICITUD_SIN_OFERTA%2F":[null,null,null,null,null,null,null,1,2,3,4,null,null,null,null,null,null],
+  "PUSH_MP_TESTE_MAON_0910":[null,null,null,null,null,null,null,null,null,null,10,null,null,null,null,null,null],
+  "MP_BBB_26_SOCIAL_CARTAO_2901_JULIETTEPROVALIDER":[null,null,null,null,null,null,null,null,null,null,null,null,null,3,7,null,null],
+  "EMAIL_NMMAIS_1012":[null,null,null,null,null,null,null,null,null,null,null,null,10,null,null,null,null],
+  "WPP_GUPSHUP_0909_NTI":[null,null,null,null,null,null,null,null,null,10,null,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_1812_B":[null,null,null,null,null,null,null,null,null,null,null,null,10,null,null,null,null],
+  "MP_PUSH_FT_2506":[null,null,null,null,null,null,10,null,null,null,null,null,null,null,null,null,null],
+  "SCORING_REAL_TIME_HOME_MINICARD_MP_RESTYLING":[null,null,null,null,null,null,null,null,1,null,1,2,3,1,1,null,null],
+  "MP_PUSH_MMAIS_2712_B":[null,null,null,null,null,null,null,null,null,null,null,null,9,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251028_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,8,1,null,null,null,null,null],
+  "MP_HOME_NMMAIS_0112_B":[null,null,null,null,null,null,null,null,null,null,null,null,8,1,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251031_STK_NCU_TC_PARTE_A":[null,null,null,null,null,null,null,null,null,null,9,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_ML_DML":[null,null,null,null,null,null,null,null,null,null,null,9,null,null,null,null,null],
+  "MP_PUSH_S0B_2305":[null,null,null,null,null,9,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251114_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,9,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251020_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,9,null,null,null,null,null,null],
+  "MP_PUSH_NMMAIS_2912":[null,null,null,null,null,null,null,null,null,null,null,null,9,null,null,null,null],
+  "ML_PUSH_MMAIS_1712":[null,null,null,null,null,null,null,null,null,null,null,null,9,null,null,null,null],
+  "AUTOMATIC_ISSUING":[null,null,null,null,null,null,null,null,null,null,null,null,2,null,2,3,1],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251016_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,7,1,null,null,null,null,null],
+  "EMAIL_ONLY_NAV_260313":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,8,null],
+  "MP_PUSH_35OFF_2912":[null,null,null,null,null,null,null,null,null,null,null,null,8,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251016_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,8,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_MP_INAT":[null,null,null,null,null,null,null,null,null,null,null,6,null,null,null,2,null],
+  "MP_PUSH_NMMAIS_1912":[null,null,null,null,null,null,null,null,null,null,null,null,8,null,null,null,null],
+  "MP_EMAIL_1612":[null,null,null,null,null,null,null,null,null,null,null,null,8,null,null,null,null],
+  "ML_PUSH_MMAIS_2212":[null,null,null,null,null,null,null,null,null,null,null,null,8,null,null,null,null],
+  "SLOT_1702_FT":[null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "PUSH_MP_2103_FT":[null,null,null,7,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_PUSH_RIODEJANEIRO_0210":[null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_WPP_FALLBACK":[null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250917_STK_NCU_TC_ATIVADOS":[null,null,null,null,null,null,null,null,null,6,1,null,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_WPP_FALLBACK":[null,null,null,null,null,null,null,null,null,null,null,3,1,1,null,2,null],
+  "ELDO_NOV_EG":[null,null,null,null,null,null,null,null,null,null,null,7,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250912_STK_NCU_ATV_INSTALL":[null,null,null,null,null,null,null,null,null,6,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251111_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,5,1,null,null,null,null],
+  "PUSH_MP_HABITO":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,6],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251104_STK_NCU_TC_PARTE_A":[null,null,null,null,null,null,null,null,null,null,null,6,null,null,null,null,null],
+  "PUSH_MP_2001_FULL_WILL":[null,null,null,null,null,null,null,null,null,null,null,null,null,6,null,null,null],
+  "WPP_GUPSHUP_2711_C2_ML_INAT":[null,null,null,null,null,null,null,null,null,null,null,5,null,1,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251009_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,6,null,null,null,null,null,null],
+  "MP_EMAIL_ONLYNAV_1908":[null,null,null,null,null,null,null,null,4,2,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_WPP_ININ_NEG":[null,null,null,null,null,null,null,null,null,null,null,6,null,null,null,null,null],
+  "DRAWER_TEST_MAR_ABIERTO":[6,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251023_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,6,null,null,null,null,null,null],
+  "SCORING_REAL_TIME_PUSH_MP_MAON":[null,6,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_0503_MP_TC_INT":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,6,null],
+  "WPP_GUPSHUP_0310_INAT":[null,null,null,null,null,null,null,null,null,null,5,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251017_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,4,1,null,null,null,null,null],
+  "FROM%253DMP_PUSH_3110":[null,null,null,null,null,null,null,null,null,null,4,1,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251015_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,4,1,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251015_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,5,null,null,null,null,null,null],
+  "MP_MODAL_70OFF_2212":[null,null,null,null,null,null,null,null,null,null,null,null,5,null,null,null,null],
+  "MP_PUSH_MMAIS_1812":[null,null,null,null,null,null,null,null,null,null,null,null,5,null,null,null,null],
+  "MP_PUSH_50OFF_2605_B":[null,null,null,null,null,5,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_SAOPAULO_0210":[null,null,null,null,null,null,null,null,null,null,5,null,null,null,null,null,null],
+  "FAQ_SOLI":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,4],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251017_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,5,null,null,null,null,null,null],
+  "MP_PUSH_MMAIS_2712":[null,null,null,null,null,null,null,null,null,null,null,null,5,null,null,null,null],
+  "MS_TCAQUISICAO_1403":[null,null,null,5,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_EMAIL_1912_B":[null,null,null,null,null,null,null,null,null,null,null,null,5,null,null,null,null],
+  "MAXWELL_SRC":[null,null,null,null,null,null,null,null,null,null,null,null,null,2,2,1,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250104_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,4,null,null,null,null,null,null],
+  "SCORING_REAL_TIME_FAQ_SOLICITUD_TC_MP":[1,1,1,null,null,null,null,null,null,1,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251027_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,4,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250104_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,4,null,null,null,null,null,null],
+  "WPP_GUPSHUP_1510_NTI":[null,null,null,null,null,null,null,null,null,null,4,null,null,null,null,null,null],
+  "PUSH_RECOVER_KYC":[3,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "EDC_2509":[null,null,null,null,null,null,null,null,null,2,1,null,null,1,null,null,null],
+  "MP_PUSH_MMAIS_2112_B":[null,null,null,null,null,null,null,null,null,null,null,null,4,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251115_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,3,1,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251024_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,4,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251117_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,3,1,null,null,null,null],
+  "MP_PUSH_ANITTA_1111":[null,null,null,null,null,null,null,null,null,null,null,4,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251023_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,4,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251025_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,3,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251024_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,3,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251108_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,2,1,null,null,null,null],
+  "MP_EMAIL_MAON_0210":[null,null,null,null,null,null,null,null,null,null,3,null,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_ML_ININ":[null,null,null,null,null,null,null,null,null,null,1,2,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_WPP_NTI_NEG":[null,null,null,null,null,null,null,null,null,null,null,3,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251107_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,3,null,null,null,null,null],
+  "MP_HUB_NMMAIS_0112_C":[null,null,null,null,null,null,null,null,null,null,null,null,3,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251015_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,3,null,null,null,null,null,null],
+  "EMAIL_MMAIS_0212":[null,null,null,null,null,null,null,null,null,null,null,null,3,null,null,null,null],
+  "WHATSAPP_RECOVER_KYC":[2,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "SCORING_REAL_TIME_UNKNOWN":[null,null,null,null,1,null,null,1,1,null,null,null,null,null,null,null,null],
+  "MP_PUSH_BELEM_0210":[null,null,null,null,null,null,null,null,null,null,3,null,null,null,null,null,null],
+  "MP_HUB_MMAIS_0112_B":[null,null,null,null,null,null,null,null,null,null,null,null,3,null,null,null,null],
+  "MP_BBB_26_SOCIAL_CARTAO_1202_JULIETTESTQUEMGANHA":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,3,null,null],
+  "WPP_GUPSHUP_2711_C2_MP_DML":[null,null,null,null,null,null,null,null,null,null,null,2,1,null,null,null,null],
+  "SCORING_REAL_TIME_HOME_MINICARD_MP":[null,null,1,null,null,1,1,null,null,null,null,null,null,null,null,null,null],
+  "ADS_MP_BANNER_ADQ":[3,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "HUB_1402_FT":[null,null,3,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_RIODEJANEIRO_0210":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251014_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251024_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "ML_PUSH_CAMPINAS_0210":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251010_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251015_STK_NCU_TC_ATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "SCORING_REAL_TIME_PUSH":[null,null,null,null,null,null,null,2,null,null,null,null,null,null,null,null,null],
+  "TOUCHPOINT_ONBOARDING_LOYALTY":[null,2,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_MP_ININ":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "EDC_0210":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_EMAIL_ONLYNAV_2409":[null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20250104_STK_NCU_TC_ATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_BBB_26_TV_2101":[null,null,null,null,null,null,null,null,null,null,null,null,null,2,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251011_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251017_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251010_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251101_STK_NCU_TC_PARTE_A":[null,null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251010_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "WPP_GUPSHUP_0503_MP_TC":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,2,null],
+  "WPP_GUPSHUP_2711_C2_ML_FALLBACK":[null,null,null,null,null,null,null,null,null,null,null,1,1,null,null,null,null],
+  "WPP_GUPSHUP_3010_MP_QMC2":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "ML_PUSH_20OFF_270126%2520MERCADOPAGO%253A%252F%252FWEBVIEW%253FURL%253DHTTPS%253A%252F%252FAPI.MERCADOPAGO.COM%252FV2%252FDISCOUNTS%252FCAMPAIGN%252F12850032%252FTERMS%252FHTML":[null,null,null,null,null,null,null,null,null,null,null,null,null,2,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251023_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "TESTE_LINK_BAU_WPP_MAR":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,2,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251009_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251013_STK_NCU_TC_NATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "MP_PUSH_BELOHORIZONTE_0210":[null,null,null,null,null,null,null,null,null,null,2,null,null,null,null,null,null],
+  "VDP_MP_1303_FT":[null,null,null,2,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_EP_ORG_DB_LIMITE":[null,null,null,null,null,null,null,null,null,null,null,1,1,null,null,null,null],
+  "MS_TCAQUISICAO_0803":[null,null,null,2,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "CREDIT_CARD_ACQUISITION_COLLATERAL":[null,null,null,null,null,null,2,null,null,null,null,null,null,null,null,null,null],
+  "ML_EMAIL_ONLYNAV_260302":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null],
+  "CX_SOLICITUD_CON_OFERTA":[1,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251013_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251106_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251013_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_HUB_FT":[null,null,null,null,null,null,1,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_EP_ORG_DB_POSITIVO":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251028_STK_NCU_TC_ATIVADOS_A":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_MP_FALLBACK":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MKT_CARTA_ENSAIOS":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "MP_BBB_26_SOCIAL_CARTAO_1601_MION":[null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null],
+  "WPP_GUPSHUP_2711_EP_ORG_FB_INATIV":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,null],
+  "HUB_MP_1303_FT":[null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_3010_MP_NTI":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251104_STK_NCU_TC_PARTE_B":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "MP_BBB_26_TV_0901":[null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null],
+  "SCORING_REAL_TIME_MS_0425_ANITTA_BENEFITS_NOPRESCORED":[null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251017_STK_NCU_TC_ATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_PUSH_CAMPINAS_0210":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "PLACEPERSONALIZATIONMPREBRANDING":[null,null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_EP_ORG_DB_FALLBACK":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "EMAIL":[null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251002_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251030_STK_NCU_TC_PARTE_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251009_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251011_STK_NCU_TC_NATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251002_STK_NCU_TC_ATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "PUSH_%255BML%252FMP%255D_%255BCAMPAIGN%255D":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "WPP_GUPSHUP_0310_ININ":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "WPP_GUPSHUP_2711_C2_MP_NTI":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "MP_PUSH_MMAIS_2112":[null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null],
+  "MP_BBB_26_SOCIAL_CARTAO_1601_ANITTA":[null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null],
+  "MP_BBB_26_SOCIAL_2701":[null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null],
+  "WPP_GUPSHUP_0909_D2_ININ":[null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null],
+  "MS_TCAQUISICAO_1803":[null,null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "ML_PUSH_RECIFE_0210":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251113_STK_NCU_TC":[null,null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null],
+  "MP_BBB_26_SOCIAL_CARTAO_2101_KERLINE":[null,null,null,null,null,null,null,null,null,null,null,null,null,1,null,null,null],
+  "TEST2_HUB_SHORTCUT":[null,null,1,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+  "EDC_1809":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251023_STK_NCU_TC_ATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "MP_TIM_CC_RCS_CONVERSAO_RCS_MP_NOME_20251024_STK_NCU_TC_ATIVADOS_B":[null,null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null],
+  "SCORING_REAL_TIME_HUB_BENEFITS_EDC_ANITTA_RTS":[null,null,null,null,null,null,null,null,null,1,null,null,null,null,null,null,null]
+};
+// ===== END DATA =====
+
+// Computed from PIVOT — MoM comparison (last 2 months)
+const _N = MESES_LABEL.length;
+const _curLbl  = MESES_LABEL[_N-1];
+const _prevLbl = MESES_LABEL[_N-2];
+const MOM_DATA = Object.entries(PIVOT).map(([label, vals]) => {
+  const cur  = vals[_N-1] || 0;
+  const prev = vals[_N-2] || 0;
+  const mom  = prev > 0 ? Math.round((cur - prev) / prev * 1000) / 10 : null;
+  return {label, mom: mom !== null ? mom : 0, cur, prev};
+}).filter(d => d.cur > 0 || d.prev > 0);
+MOM_DATA.sort((a,b) => b.mom - a.mom);
+
+// Update subtitle + focus box
+(function() {
+  const firstLbl = MESES_LABEL[0];
+  document.getElementById('dashSubtitle').innerHTML =
+    firstLbl + ' → ' + _curLbl + ' &nbsp;·&nbsp; Visão geral + segmentação por faixa de limite';
+  document.getElementById('focusTitle').textContent = '⚡ ' + _curLbl + ' em Foco — Atualização mais recente';
+  // KPIs
+  const curTotal  = TOTAL_MES[_N-1] || 0;
+  const prevTotal = TOTAL_MES[_N-2] || 0;
+  const momTotal  = prevTotal > 0 ? ((curTotal - prevTotal)/prevTotal*100) : 0;
+  document.getElementById('focusTotalLabel').textContent = 'Total ' + _curLbl;
+  document.getElementById('focusTotalVal').textContent   = fmt(curTotal);
+  const momSign = momTotal >= 0 ? '▲ +' : '▼ ';
+  const momCls  = momTotal >= 0 ? 'kpi-up' : 'kpi-down';
+  const sub = document.getElementById('focusTotalSub');
+  sub.textContent = momSign + Math.abs(momTotal).toFixed(1) + '% vs ' + _prevLbl;
+  sub.className = 'kpi-sub ' + momCls;
+  // Top gainer
+  const best = MOM_DATA[0];
+  if (best) {
+    document.getElementById('focusBestName').textContent = best.label;
+    document.getElementById('focusBestSub').textContent  = '▲ +' + best.mom + '% · ' + fmt(best.prev) + ' → ' + fmt(best.cur);
+    document.getElementById('focusBestSub').className    = 'kpi-sub kpi-up';
+  }
+  // By volume: top 2 for current month
+  const byVol = Object.entries(PIVOT)
+    .map(([k,v]) => ({k, v: v[_N-1] || 0}))
+    .filter(x => x.v > 0)
+    .sort((a,b) => b.v - a.v);
+  const leader = byVol[0], second = byVol[1];
+  if (leader) {
+    document.getElementById('focusLeaderLabel').textContent = '🌟 Líder — ' + _curLbl;
+    document.getElementById('focusLeaderName').textContent  = leader.k;
+    const lMom = MOM_DATA.find(d => d.label === leader.k);
+    document.getElementById('focusLeaderSub').textContent =
+      fmt(leader.v) + (lMom ? ' · ' + (lMom.mom >= 0 ? '+' : '') + lMom.mom + '% MoM' : '');
+  }
+  if (second) {
+    document.getElementById('focus2ndName').textContent = second.k;
+    const sMom = MOM_DATA.find(d => d.label === second.k);
+    document.getElementById('focus2ndSub').textContent =
+      fmt(second.v) + (sMom ? ' · ' + (sMom.mom >= 0 ? '+' : '') + sMom.mom + '% MoM' : '');
+  }
+  // Top loser
+  const worst = [...MOM_DATA].sort((a,b) => a.mom - b.mom)[0];
+  if (worst && worst.mom < 0) {
+    document.getElementById('focusWorstName').textContent = worst.label;
+    document.getElementById('focusWorstSub').textContent  = '▼ ' + worst.mom + '% · ' + fmt(worst.prev) + ' → ' + fmt(worst.cur);
+    document.getElementById('focusWorstSub').className    = 'kpi-sub kpi-down';
+  }
+})();
+
+// Estático — comunicações únicas (tabela separada, atualizar manualmente)
+const TOTAL_UNICOS = [7386,5066,9520,25635,41480,44732,55697,48023,36476,36013,52079,23830,27480,8092,9770];
+
+const FAIXAS_LABEL = ["<1k","<2k","<3k","<5k","<6k","<7k","<8k","<10k","<15k","<20k","<30k","<50k","≥50k"];
+
+// --- Seção 2: Segmentação por limite ---
+const SEG = {
+  p1: {
+    baixo:[1849194,1970319,2414568,3741557,3277984,3766219,5200632,5772206,6161543,4675446,5400919,4615723,4366165,4488806,10767813],
+    medio:[3094798,3245705,4082155,4929737,4460656,4707148,4969786,4669878,5274603,4301463,4513622,4243430,4111954,4182565,9291880],
+    alto: [1649844,1586186,2234708,2338026,2227891,2689326,2723062,2504635,2731398,2644646,2723439,2628111,2534680,2651680,5659667]
+  },
+  p2: {
+    baixo:[{l:"Bottom Sheet",p:12.3},{l:"HOME_MINICARD_RESTYLING",p:10.3},{l:"One Page",p:10.2},{l:"CHO - Checkout",p:7.6},{l:"Onboarding",p:6.9},{l:"HOME_MINICARD",p:5.3},{l:"BANNER_DASHBOARD",p:4.8},{l:"MP_HOME_ANITTA",p:4.5},{l:"EA",p:4.3},{l:"PUSH",p:3.0}],
+    medio:[{l:"One Page",p:14.8},{l:"CHO - Checkout",p:12.9},{l:"Bottom Sheet",p:11.4},{l:"HOME_MINICARD_RESTYLING",p:8.5},{l:"Onboarding",p:7.4},{l:"HOME_MINICARD",p:4.5},{l:"BANNER_DASHBOARD",p:4.4},{l:"MP_HOME_ANITTA",p:3.8},{l:"PUSH",p:2.2},{l:"CARDS_LISTING_FULL",p:2.2}],
+    alto: [{l:"One Page",p:22.6},{l:"CHO - Checkout",p:16.0},{l:"Bottom Sheet",p:10.9},{l:"HOME_MINICARD_RESTYLING",p:7.5},{l:"Onboarding",p:6.0},{l:"BANNER_DASHBOARD",p:3.6},{l:"HOME_MINICARD",p:3.5},{l:"MP_HOME_ANITTA",p:2.9},{l:"CARDS_LISTING_FULL",p:2.0},{l:"VIP_WEB",p:1.6}]
+  },
+  p3: {
+    baixo:[{l:"Bronze",p:23.1},{l:"Silver",p:54.7},{l:"Gold",p:21.3},{l:"Platinum",p:0.7},{l:"Nulo",p:0.3}],
+    medio:[{l:"Bronze",p:3.6},{l:"Silver",p:21.8},{l:"Gold",p:62.4},{l:"Platinum",p:11.6},{l:"Nulo",p:0.5}],
+    alto: [{l:"Bronze",p:0.8},{l:"Silver",p:5.2},{l:"Gold",p:36.0},{l:"Platinum",p:56.8},{l:"Nulo",p:1.2}]
+  },
+  p5: {
+    "One Page":      [9.2,10.6,12.2,13.7,15.1,15.7,16.1,17.0,18.4,26.8,15.3,10.2,12.2],
+    "Bottom Sheet":  [12.7,11.8,12.0,11.6,11.5,11.3,11.1,11.0,10.9,11.1,6.9,5.9,9.8],
+    "CHO - Checkout":[5.4,9.6,11.1,12.2,13.0,13.5,14.0,14.4,15.1,17.0,12.5,12.1,17.1]
+  }
+};
+
+const COLORS = ['#f5c518','#00c6ff','#00e676','#ff5252','#ffab40','#e040fb','#40c4ff','#69f0ae','#ff6e40','#ea80fc','#b2ff59','#ff4081','#64ffda','#ffd740','#ff6d00','#40c4ff','#b9f6ca','#ccff90','#80d8ff','#a7ffeb'];
+const NISE_COLORS = {'Bronze':'#cd7f32','Silver':'#c0c0c0','Gold':'#f5c518','Platinum':'#00c6ff','Nulo':'#444'};
+
+function fmt(n){if(!n&&n!==0)return'—';return Number(n).toLocaleString('pt-BR');}
+
+// Update dynamic chart titles
+(function(){
+  const el1 = document.getElementById('titleMoM');
+  if(el1) el1.textContent = _curLbl + ' vs ' + _prevLbl + ' — variação MoM por placement (%)';
+  const el2 = document.getElementById('titleMar3m');
+  if(el2) el2.textContent = 'Top placements — ' + (MESES_LABEL[_N-3]||'') + ' · ' + _prevLbl + ' · ' + _curLbl;
+})();
+
+// Total por mês — color last 3 months in blue
+const _colorBar = MESES_LABEL.map((_,i) => i >= _N-3 ? 'rgba(0,198,255,.7)' : 'rgba(245,197,24,.6)');
+const _borderBar = MESES_LABEL.map((_,i) => i >= _N-3 ? '#00c6ff' : '#f5c518');
+
+// =================== SEÇÃO 1 ===================
+
+// Total por mês
+new Chart(document.getElementById('chartTotal'),{
+  type:'bar',
+  data:{labels:MESES_LABEL,datasets:[{label:'Total',data:TOTAL_MES,backgroundColor:_colorBar,borderColor:_borderBar,borderWidth:1,borderRadius:4}]},
+  options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)+' usuários'}}},scales:{x:{ticks:{color:'#8890a4'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#8890a4',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,.06)'}}}}
+});
+
+// Lines com pills
+const top15Keys = Object.keys(PIVOT).slice(0,15);
+let activeLines = new Set(["One Page","CHO - CHECKOUT ML","HOME_MINICARD_MP_RESTYLING","EA","PUSH_ML_ENCENDIDO_D1","Bottom Sheet"]);
+const lineCtx = document.getElementById('chartLines');
+let lineChart;
+
+function buildLineDs(){
+  return top15Keys.map((k,i)=>({label:k,data:PIVOT[k],borderColor:COLORS[i],backgroundColor:COLORS[i]+'18',borderWidth:activeLines.has(k)?2.5:0,pointRadius:activeLines.has(k)?3:0,tension:.3,hidden:!activeLines.has(k),fill:false}));
+}
+function renderLine(){
+  if(lineChart)lineChart.destroy();
+  lineChart=new Chart(lineCtx,{type:'line',data:{labels:MESES_LABEL,datasets:buildLineDs()},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.hidden?null:' '+c.dataset.label+': '+fmt(c.raw)},filter:i=>!i.dataset.hidden}},scales:{x:{ticks:{color:'#8890a4'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#8890a4',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,.06)'}}}}});
+}
+function buildPills(){
+  const pr=document.getElementById('pillRow');pr.innerHTML='';
+  top15Keys.forEach((k,i)=>{
+    const p=document.createElement('div');
+    p.className='pill'+(activeLines.has(k)?' active':'');
+    if(activeLines.has(k)){p.style.borderColor=COLORS[i];p.style.color=COLORS[i];p.style.background=COLORS[i]+'22';}
+    p.textContent=k;
+    p.onclick=()=>{activeLines.has(k)?activeLines.delete(k):activeLines.add(k);buildPills();renderLine();};
+    pr.appendChild(p);
+  });
+}
+buildPills();renderLine();
+
+// Heatmap
+function getHeatColor(v,max){if(!v)return'transparent';const r=v/max;if(r>.8)return'rgba(245,197,24,.35)';if(r>.6)return'rgba(245,197,24,.25)';if(r>.4)return'rgba(0,198,255,.2)';if(r>.2)return'rgba(0,198,255,.12)';return'rgba(0,198,255,.06)';}
+const table=document.getElementById('heatTable');
+const thead=document.createElement('thead');const hr=document.createElement('tr');
+hr.innerHTML='<th>Placement</th>'+MESES_LABEL.map(m=>`<th>${m}</th>`).join('')+'<th>Total</th>';
+thead.appendChild(hr);table.appendChild(thead);
+const tbody=document.createElement('tbody');
+Object.keys(PIVOT).forEach(k=>{
+  const vals=PIVOT[k];const total=vals.reduce((a,v)=>a+(v||0),0);const max=Math.max(...vals.map(v=>v||0));
+  const lv=vals[vals.length-1]||0;const pv=vals[vals.length-3]||0;
+  let badge='';
+  if(!vals[0]&&lv>0)badge='<span class="badge badge-new">NOVO</span>';
+  else if(lv===0&&total>0)badge='<span class="badge badge-dead">PAROU</span>';
+  else if(lv>pv*1.3&&lv>5000)badge='<span class="badge badge-up">▲</span>';
+  else if(lv<pv*.7&&pv>5000)badge='<span class="badge badge-down">▼</span>';
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${badge} ${k}</td>`+vals.map(v=>`<td style="background:${getHeatColor(v,max)}">${fmt(v)}</td>`).join('')+`<td style="color:#f5c518;font-weight:700">${fmt(total)}</td>`;
+  tbody.appendChild(tr);
+});
+table.appendChild(tbody);
+
+// Bar top 10
+const totals=Object.entries(PIVOT).map(([k,v])=>[k,v.reduce((a,n)=>a+(n||0),0)]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+new Chart(document.getElementById('chartBar'),{type:'bar',data:{labels:totals.map(([k])=>k),datasets:[{data:totals.map(([,v])=>v),backgroundColor:COLORS.slice(0,10),borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)}}},scales:{x:{ticks:{color:'#8890a4',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,.06)'}},y:{ticks:{color:'#e8eaf0',font:{size:10}},grid:{display:false}}}}});
+
+// Únicos
+new Chart(document.getElementById('chartUnicos'),{type:'line',data:{labels:MESES_LABEL,datasets:[{label:'Comunicações únicas',data:TOTAL_UNICOS,borderColor:'#e040fb',backgroundColor:'rgba(224,64,251,.1)',fill:true,tension:.3,borderWidth:2,pointRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmt(c.raw)+' usuários'}}},scales:{x:{ticks:{color:'#8890a4'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#8890a4',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,.06)'}}}}});
+
+// =================== MARÇO EM FOCO — GRÁFICOS ===================
+
+// MoM bar — computed from PIVOT above
+new Chart(document.getElementById('chartMoM'),{
+  type:'bar',
+  data:{
+    labels:MOM_DATA.map(d=>d.label),
+    datasets:[{
+      data:MOM_DATA.map(d=>d.mom),
+      backgroundColor:MOM_DATA.map(d=>d.mom>0?'rgba(0,230,118,.7)':'rgba(255,82,82,.7)'),
+      borderColor:MOM_DATA.map(d=>d.mom>0?'#00e676':'#ff5252'),
+      borderWidth:1,borderRadius:4
+    }]
+  },
+  options:{
+    indexAxis:'y',responsive:true,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+(c.raw>0?'+':'')+c.raw+'%'}}},
+    scales:{
+      x:{ticks:{color:'#8890a4',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'},
+         title:{display:true,text:'Variação ' + _curLbl + ' vs ' + _prevLbl,color:'#8890a4',font:{size:10}}},
+      y:{ticks:{color:'#e8eaf0',font:{size:10}},grid:{display:false}}
+    }
+  }
+});
+
+// Top placements — 3 últimos meses (dinâmico)
+const TOP8_KEYS = ['HOME_MINICARD_MP_RESTYLING','EA','One Page','CHO - CHECKOUT ML','Bottom Sheet','Onboarding','CARDS_LISTING_RESTYLING_FULL_TC','PUSH_ML_ENCENDIDO_D1'];
+const TOP8_LABELS = ['MINICARD REST.','EA','One Page','CHO Checkout','Bottom Sheet','Onboarding','CARDS FULL TC','PUSH ENC.D1'];
+new Chart(document.getElementById('chartMar3m'),{
+  type:'bar',
+  data:{
+    labels:TOP8_LABELS,
+    datasets:[
+      {label:MESES_LABEL[_N-3]||'',data:TOP8_KEYS.map(k=>(PIVOT[k]||[])[_N-3]||0),backgroundColor:'rgba(136,144,164,.5)',borderRadius:3},
+      {label:MESES_LABEL[_N-2]||'',data:TOP8_KEYS.map(k=>(PIVOT[k]||[])[_N-2]||0),backgroundColor:'rgba(245,197,24,.5)',borderRadius:3},
+      {label:MESES_LABEL[_N-1]||'',data:TOP8_KEYS.map(k=>(PIVOT[k]||[])[_N-1]||0),backgroundColor:'rgba(0,198,255,.75)',borderRadius:3}
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom',labels:{color:'#8890a4',font:{size:11},padding:10}},
+      tooltip:{mode:'index',intersect:false,callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},
+    scales:{
+      x:{ticks:{color:'#8890a4',font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}},
+      y:{ticks:{color:'#8890a4',callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,.06)'}}
+    }
+  }
+});
+
+// =================== SEÇÃO 2 — NISE + FILTRO GLOBAL TC ===================
+
+// Dados NISE × TC
+const ND = {
+  p1: {
+    todos: {
+      Bronze:   [501345,513460,402987,799503,736069,952721,1613034,1605264,1619465,1222007,1433804,1183426,1269198,1421490,3319077],
+      Silver:   [2183011,2188262,2393152,2896655,2819117,3172989,3748981,3863350,4444788,3611717,4053957,3625199,3502572,3627455,8679782],
+      Gold:     [2857394,2980494,4271550,5061363,4477989,4906301,5352007,5334495,5771883,4496792,4734667,4418705,4152317,4248438,9485312],
+      Platinum: [1007030,1081087,1605743,2183591,1864210,2056770,2109316,2055022,2240822,2179626,2305585,2135721,1999096,2021617,4233335]
+    },
+    full: {
+      Bronze:   [499912,511104,379527,610552,494714,621664,1116494,1030952,1089769,697694,775498,718944,729625,928478,2127589],
+      Silver:   [2182110,2187183,2373084,2735544,2608655,2929475,3371848,3418956,3993662,3036787,3391474,3102889,2939323,3170837,7553296],
+      Gold:     [2857174,2980329,4271297,5060626,4477071,4905156,5348176,5330881,5765772,4486549,4725756,4411354,4144844,4242830,9474054],
+      Platinum: [1007018,1081059,1605720,2183534,1864168,2056661,2109017,2054727,2240329,2179053,2305080,2135374,1998776,2021300,4232649]
+    },
+    micro: {
+      Bronze:   [1433,2356,23460,188951,241355,331057,496540,574312,529696,524313,658306,464482,539573,493012,1191488],
+      Silver:   [901,1079,20068,161111,210462,243514,377133,444394,451126,574930,662483,522310,563249,456618,1126486],
+      Gold:     [220,165,253,737,918,1145,3831,3614,6111,10243,8911,7351,7473,5608,11258],
+      Platinum: [12,28,23,57,42,109,299,295,493,573,505,347,320,317,686]
+    }
+  },
+  p2: {
+    todos: {
+      Bronze:   [{l:'HOME_MINICARD_MP_RESTYLING',p:12.7},{l:'Bottom Sheet',p:11.3},{l:'One Page',p:8.4},{l:'EA',p:6.8},{l:'HOME_MINICARD_MP',p:6.2},{l:'CHO - CHECKOUT ML',p:6.2},{l:'BANNER_DASHBOARD',p:5.5},{l:'Onboarding',p:5},{l:'MP_HOME_ANITTA',p:4.6},{l:'PUSH',p:3.3}],
+      Silver:   [{l:'Bottom Sheet',p:12.5},{l:'One Page',p:11.3},{l:'HOME_MINICARD_MP_RESTYLING',p:9.6},{l:'CHO - CHECKOUT ML',p:9.3},{l:'Onboarding',p:6.6},{l:'HOME_MINICARD_MP',p:5.1},{l:'BANNER_DASHBOARD',p:4.7},{l:'MP_HOME_ANITTA',p:4.3},{l:'PUSH',p:2.9},{l:'EA',p:2.5}],
+      Gold:     [{l:'One Page',p:15.8},{l:'CHO - CHECKOUT ML',p:13.1},{l:'Bottom Sheet',p:12.2},{l:'Onboarding',p:7.6},{l:'HOME_MINICARD_MP_RESTYLING',p:7.3},{l:'MP_HOME_ANITTA',p:3.9},{l:'HOME_MINICARD_MP',p:3.8},{l:'BANNER_DASHBOARD',p:3.8},{l:'PUSH_ML_ENCENDIDO_D1',p:2.3},{l:'VIP',p:2}],
+      Platinum: [{l:'One Page',p:24.8},{l:'CHO - CHECKOUT ML',p:14.9},{l:'Bottom Sheet',p:11.5},{l:'Onboarding',p:7.3},{l:'HOME_MINICARD_MP_RESTYLING',p:5.4},{l:'BANNER_DASHBOARD',p:3},{l:'HOME_MINICARD_MP',p:2.9},{l:'MP_HOME_ANITTA',p:2.9},{l:'PUSH_ML_ENCENDIDO_D1',p:2},{l:'VIP_WEB',p:1.7}]
+    },
+    full: {
+      Bronze:   [{l:'HOME_MINICARD_MP_RESTYLING',p:12.8},{l:'Bottom Sheet',p:10},{l:'CHO - CHECKOUT ML',p:8.2},{l:'One Page',p:8},{l:'HOME_MINICARD_MP',p:6.8},{l:'MP_HOME_ANITTA',p:6.1},{l:'BANNER_DASHBOARD',p:6.1},{l:'EA',p:5.6},{l:'Onboarding',p:5.1},{l:'PUSH',p:3.7}],
+      Silver:   [{l:'Bottom Sheet',p:11.9},{l:'One Page',p:11.6},{l:'CHO - CHECKOUT ML',p:11},{l:'HOME_MINICARD_MP_RESTYLING',p:9.4},{l:'Onboarding',p:6.8},{l:'HOME_MINICARD_MP',p:5.1},{l:'BANNER_DASHBOARD',p:4.8},{l:'MP_HOME_ANITTA',p:4.7},{l:'PUSH',p:2.9},{l:'CARDS_LISTING_RESTYLING_FULL_TC',p:2.3}],
+      Gold:     [{l:'One Page',p:15.9},{l:'CHO - CHECKOUT ML',p:13.2},{l:'Bottom Sheet',p:12.3},{l:'Onboarding',p:7.7},{l:'HOME_MINICARD_MP_RESTYLING',p:7.1},{l:'MP_HOME_ANITTA',p:3.9},{l:'BANNER_DASHBOARD',p:3.8},{l:'HOME_MINICARD_MP',p:3.8},{l:'PUSH_ML_ENCENDIDO_D1',p:2.4},{l:'VIP',p:2}],
+      Platinum: [{l:'One Page',p:24.8},{l:'CHO - CHECKOUT ML',p:14.9},{l:'Bottom Sheet',p:11.5},{l:'Onboarding',p:7.3},{l:'HOME_MINICARD_MP_RESTYLING',p:5.4},{l:'BANNER_DASHBOARD',p:2.9},{l:'HOME_MINICARD_MP',p:2.9},{l:'MP_HOME_ANITTA',p:2.9},{l:'PUSH_ML_ENCENDIDO_D1',p:2},{l:'VIP_WEB',p:1.7}]
+    },
+    micro: {
+      Bronze:   [{l:'Bottom Sheet',p:12.8},{l:'HOME_MINICARD_MP_RESTYLING',p:12.6},{l:'One Page',p:8.8},{l:'EA',p:8.2},{l:'HOME_MINICARD_MP',p:5.6},{l:'Onboarding',p:5},{l:'BANNER_DASHBOARD',p:4.8},{l:'CHO - CHECKOUT ML',p:4},{l:'CARDS_LISTING_RESTYLING_MICRO_TC',p:3.9},{l:'MP_HOME_ANITTA',p:2.9}],
+      Silver:   [{l:'Bottom Sheet',p:14.2},{l:'One Page',p:10.5},{l:'HOME_MINICARD_MP_RESTYLING',p:10.1},{l:'Onboarding',p:6.3},{l:'HOME_MINICARD_MP',p:4.9},{l:'BANNER_DASHBOARD',p:4.4},{l:'CHO - CHECKOUT ML',p:4.3},{l:'EA',p:3.8},{l:'MP_HOME_ANITTA',p:3},{l:'CARDS_LISTING_RESTYLING_MICRO_TC',p:3}],
+      Gold:     [{l:'HOME_MINICARD_MP_RESTYLING',p:22.3},{l:'Bottom Sheet',p:9.9},{l:'EA',p:7.2},{l:'HOME_MINICARD_MP',p:6.8},{l:'One Page',p:5.5},{l:'CARDS_LISTING_RESTYLING_MICRO_TC',p:5.1},{l:'PUSH',p:4.7},{l:'BANNER_DASHBOARD',p:4.2},{l:'MP_HOME_ANITTA',p:3.5},{l:'CHO - CHECKOUT ML',p:2.4}],
+      Platinum: [{l:'HOME_MINICARD_MP_RESTYLING',p:13.7},{l:'Bottom Sheet',p:10.4},{l:'HOME_MINICARD_MP',p:8.8},{l:'EA',p:6.6},{l:'One Page',p:6.2},{l:'BANNER_DASHBOARD',p:5.5},{l:'PUSH',p:5},{l:'MP_HOME_ANITTA',p:5},{l:'CARDS_LISTING_RESTYLING_MICRO_TC',p:3.9},{l:'WAITLIST_APPROVED_PUSH',p:2.8}]
+    }
+  },
+  p3: {
+    todos:  [{l:'Bronze',p:10.4},{l:'Silver',p:30.8},{l:'Gold',p:40.7},{l:'Platinum',p:17.5}],
+    full:   [{l:'Bronze',p:7.4},{l:'Silver',p:29.5},{l:'Gold',p:43.7},{l:'Platinum',p:18.7}],
+    micro:  [{l:'Bronze',p:51.5},{l:'Silver',p:47.9},{l:'Gold',p:0.6},{l:'Platinum',p:0}]
+  }
+};
+
+// Estado global
+let curTC = 'todos';
+let curNise = 'Bronze';
+
+const TC_LABELS = {todos:'Todos',full:'TC Full',micro:'Micro TC'};
+const NISE_ORDER = ['Bronze','Silver','Gold','Platinum'];
+
+function setTC(tc, el) {
+  curTC = tc;
+  document.querySelectorAll('.tc-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const lbl = tc === 'todos' ? '' : `· ${TC_LABELS[tc]}`;
+  ['tcLabelMix','tcLabelNise','tcLabelVol'].forEach(id=>{
+    const el2=document.getElementById(id); if(el2) el2.textContent=lbl;
+  });
+  document.getElementById('tcNote').textContent = tc==='todos'
+    ? '↑ afeta todos os gráficos abaixo'
+    : `↑ filtrando por ${TC_LABELS[tc]} em todos os gráficos`;
+  rebuildAll();
+}
+
+function switchNiseMix(nise, el) {
+  curNise = nise;
+  document.getElementById('niseMixTabs').querySelectorAll('.seg-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  rebuildMix();
+}
+
+function rebuildAll() { rebuildMix(); rebuildNiseDoughnut(); rebuildVolGrupo(); }
+
+// Chart Mix
+let mixChart;
+function rebuildMix() {
+  const data = ND.p2[curTC][curNise];
+  if(!data || data.length===0) return;
+  if(mixChart) mixChart.destroy();
+  const maxP = Math.max(...data.map(d=>d.p));
+  mixChart = new Chart(document.getElementById('chartMix'),{
+    type:'bar',
+    data:{labels:data.map(d=>d.l),datasets:[{data:data.map(d=>d.p),backgroundColor:COLORS,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+'%'}}},
+      scales:{x:{ticks:{color:'#8890a4',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'},max:Math.ceil(maxP/5)*5+5},
+              y:{ticks:{color:'#e8eaf0',font:{size:10}},grid:{display:false}}}}
+  });
+}
+rebuildMix();
+
+// Donut NISE
+let niseChart;
+function rebuildNiseDoughnut() {
+  const data = ND.p3[curTC];
+  if(niseChart) niseChart.destroy();
+  niseChart = new Chart(document.getElementById('chartNise'),{
+    type:'doughnut',
+    data:{labels:data.map(d=>d.l),datasets:[{data:data.map(d=>d.p),backgroundColor:data.map(d=>NISE_COLORS[d.l]||'#555'),borderWidth:2,borderColor:'#1a1d2e'}]},
+    options:{responsive:true,cutout:'60%',plugins:{
+      legend:{position:'bottom',labels:{color:'#8890a4',font:{size:11},padding:10}},
+      tooltip:{callbacks:{label:c=>' '+c.label+': '+c.raw+'%'}}
+    }}
+  });
+}
+rebuildNiseDoughnut();
+
+// Share placement × NISE (grouped bar — reage ao filtro TC)
+const KEY_PLACEMENTS = ['One Page','Bottom Sheet','CHO - CHECKOUT ML','HOME_MINICARD_MP_RESTYLING','Onboarding','EA','PUSH_ML_ENCENDIDO_D1','PUSH'];
+const KEY_LABELS     = ['One Page','Bottom Sheet','CHO Checkout','MINICARD REST.','Onboarding','EA','PUSH ENC.D1','PUSH'];
+const NISE_BAR_COLORS = {Bronze:'#cd7f32',Silver:'#b0b0b0',Gold:'#f5c518',Platinum:'#00c6ff'};
+
+let volChart;
+function rebuildVolGrupo() {
+  // Para cada placement, pegar o share em cada NISE tier
+  const datasets = NISE_ORDER.map(nise => {
+    const p2 = ND.p2[curTC][nise] || [];
+    const vals = KEY_PLACEMENTS.map(pl => {
+      const found = p2.find(d => d.l === pl);
+      return found ? found.p : 0;
+    });
+    return {
+      label: nise,
+      data: vals,
+      backgroundColor: NISE_BAR_COLORS[nise] + 'bb',
+      borderColor: NISE_BAR_COLORS[nise],
+      borderWidth: 1,
+      borderRadius: 3
+    };
+  });
+
+  if(volChart) volChart.destroy();
+  volChart = new Chart(document.getElementById('chartVolGrupo'), {
+    type: 'bar',
+    data: { labels: KEY_LABELS, datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position:'bottom', labels:{ color:'#8890a4', font:{size:11}, padding:10 } },
+        tooltip: { callbacks:{ label: c => ' '+c.dataset.label+': '+c.raw+'%' } }
+      },
+      scales: {
+        x: { ticks:{ color:'#8890a4', font:{size:9} }, grid:{ color:'rgba(255,255,255,.04)' } },
+        y: { ticks:{ color:'#8890a4', callback: v => v+'%' }, grid:{ color:'rgba(255,255,255,.06)' },
+             title:{ display:true, text:'Share no mix (%)', color:'#8890a4', font:{size:10} } }
+      }
+    }
+  });
+}
+rebuildVolGrupo();
+
+// TC type (estático — mostra distribuição fixa por NISE em cada TC)
+new Chart(document.getElementById('chartTC'),{
+  type:'bar',
+  data:{labels:['TC Full','Micro TC'],datasets:[
+    {label:'Bronze',  data:[7.4,51.5],backgroundColor:'#cd7f32bb',borderRadius:4},
+    {label:'Silver',  data:[29.5,47.9],backgroundColor:'#c0c0c0bb',borderRadius:4},
+    {label:'Gold',    data:[43.7,0.6],backgroundColor:'#f5c518bb',borderRadius:4},
+    {label:'Platinum',data:[18.7,0],  backgroundColor:'#00c6ffbb',borderRadius:4}
+  ]},
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#8890a4',font:{size:11},padding:10}},
+    tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw+'%'}}},
+    scales:{x:{ticks:{color:'#8890a4'},grid:{display:false},stacked:true},
+            y:{ticks:{color:'#8890a4',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.06)'},max:100,stacked:true}}}
+});
+</script>
+</body>
+</html>
