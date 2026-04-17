@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>Comparativo Ações R$50 – Abril 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0a0a0a;
+    color: #e8e8e8;
+    padding: 36px 32px;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 18px;
+  }
+
+  header h1 { font-size: 22px; font-weight: 700; color: #fff; }
+  header p  { font-size: 12px; color: #555; margin-top: 4px; }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+  }
+
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ─── KPI CARDS ─── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .kpi-card {
+    border: 1px solid #1e1e1e;
+    background: #111;
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .kpi-card.c0::before { background: #94a3b8; }
+  .kpi-card.c1::before { background: #3b82f6; }
+  .kpi-card.c2::before { background: #10b981; }
+  .kpi-card.c3::before { background: #f43f5e; }
+
+  .kpi-card .label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #555;
+    margin-bottom: 10px;
+  }
+
+  .kpi-card .group-name {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .kpi-card.c0 .group-name { color: #64748b; }
+  .kpi-card.c1 .group-name { color: #2563eb; }
+  .kpi-card.c2 .group-name { color: #059669; }
+  .kpi-card.c3 .group-name { color: #e11d48; }
+
+  .kpi-card .metric { margin-bottom: 8px; }
+  .kpi-card .metric .val {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .kpi-card.c0 .metric .val { color: #334155; }
+  .kpi-card.c1 .metric .val { color: #1d4ed8; }
+  .kpi-card.c2 .metric .val { color: #047857; }
+  .kpi-card.c3 .metric .val { color: #be123c; }
+
+  .kpi-card .metric .unit {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-left: 2px;
+  }
+
+  .kpi-card .metric .meta {
+    font-size: 11px;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  .delta-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 4px;
+  }
+
+  .delta-pill.pos { background: #dcfce7; color: #166534; }
+  .delta-pill.neg { background: #fee2e2; color: #991b1b; }
+
+  /* ─── CHARTS ─── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .chart-card {
+    border: 1px solid #1e1e1e;
+    background: #111;
+    border-radius: 12px;
+    padding: 22px 20px 16px;
+  }
+
+  .chart-card h3 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #555;
+    margin-bottom: 16px;
+  }
+
+  .chart-wrap { height: 200px; position: relative; }
+
+  /* ─── NISE ─── */
+  .nise-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .nise-card {
+    border: 1px solid #1e1e1e;
+    background: #111;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .nise-header {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nise-header.gold { background: #2a2000; color: #fbbf24; }
+  .nise-header.plat { background: #1a1a1a; color: #94a3b8; }
+
+  .nise-chart-wrap { padding: 16px 20px; height: 220px; position: relative; }
+
+  .nise-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid #1e1e1e;
+  }
+
+  .nise-metric {
+    padding: 12px 16px;
+    border-right: 1px solid #1e1e1e;
+    text-align: center;
+  }
+
+  .nise-metric:last-child { border-right: none; }
+
+  .nise-metric .nm-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #aaa;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .nise-metric .nm-vals {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .nm-val {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .nm-val.ctrl { color: #94a3b8; }
+  .nm-val.bau  { color: #3b82f6; }
+  .nm-val.cmb  { color: #10b981; }
+  .nm-val.sce  { color: #f43f5e; }
+  .nm-val small { display: block; font-size: 9px; font-weight: 400; color: #bbb; margin-top: 1px; }
+
+  /* ─── TABLE ─── */
+  .section-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #444;
+    margin: 28px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after { content: ''; flex: 1; height: 1px; background: #1e1e1e; }
+
+  .table-wrap {
+    border: 1px solid #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+
+  thead th {
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #111;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  thead th:first-child { text-align: left; color: #555; }
+  thead th.c1 { color: #3b82f6; }
+  thead th.c2 { color: #10b981; }
+  thead th.c3 { color: #f43f5e; }
+
+  tbody tr { border-bottom: 1px solid #161616; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #151515; }
+
+  td { padding: 9px 16px; text-align: center; color: #ccc; }
+  td:first-child { text-align: left; color: #888; font-weight: 500; }
+
+  .sep-row td {
+    background: #0e0e0e;
+    color: #333;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 16px;
+  }
+
+  .best { font-weight: 800; color: #34d399; }
+  .pill-lift { background: #1a1200; color: #fbbf24; padding: 2px 7px; border-radius: 20px; font-weight: 700; font-size: 11px; }
+  .pill-cac  { background: #1a0010; color: #f472b6; padding: 2px 7px; border-radius: 20px; font-weight: 700; font-size: 11px; }
+
+  footer { font-size: 11px; color: #333; margin-top: 28px; text-align: right; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Comparativo Ações R$50 &mdash; Abril 2026</h1>
+    <p>Período: 08/04/2026 → 30/04/2026 &nbsp;|&nbsp; Gerado em 17/04/2026</p>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div>Controle</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Cupom 50 – BAU</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Cupom 50 – Combo</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f43f5e"></div>Cupom 50 – Sem CE</div>
+  </div>
+</header>
+
+<!-- KPI CARDS -->
+<div class="kpi-row">
+  <div class="kpi-card c0">
+    <div class="label">Grupo</div>
+    <div class="group-name">Controle</div>
+    <div class="metric"><span class="val">0,76</span><span class="unit">%</span><div class="meta">Conv – BASE</div></div>
+    <div class="metric" style="margin-top:10px"><span class="val">355</span><span class="unit">k</span><div class="meta">Base</div></div>
+  </div>
+  <div class="kpi-card c1">
+    <div class="label">Melhor Lift</div>
+    <div class="group-name">Cupom 50 – BAU</div>
+    <div class="metric"><span class="val">0,90</span><span class="unit">%</span><div class="meta">Conv – BASE</div></div>
+    <span class="delta-pill pos">+19% lift &nbsp; 3.492 incr.</span>
+    <div class="metric" style="margin-top:8px"><span class="val">R$127</span><div class="meta">CAC</div></div>
+  </div>
+  <div class="kpi-card c2">
+    <div class="label">Menor CAC</div>
+    <div class="group-name">Cupom 50 – Combo</div>
+    <div class="metric"><span class="val">0,85</span><span class="unit">%</span><div class="meta">Conv – BASE</div></div>
+    <span class="delta-pill pos">+13% lift &nbsp; 2.034 incr.</span>
+    <div class="metric" style="margin-top:8px"><span class="val">R$122</span><div class="meta">CAC ✓</div></div>
+  </div>
+  <div class="kpi-card c3">
+    <div class="label">Grupo</div>
+    <div class="group-name">Cupom 50 – Sem CE</div>
+    <div class="metric"><span class="val">0,89</span><span class="unit">%</span><div class="meta">Conv – BASE</div></div>
+    <span class="delta-pill pos">+17% lift &nbsp; 2.737 incr.</span>
+    <div class="metric" style="margin-top:8px"><span class="val">R$133</span><div class="meta">CAC</div></div>
+  </div>
+</div>
+
+<!-- CHARTS ROW 1 -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>% Conversão – BASE</h3>
+    <div class="chart-wrap"><canvas id="chartConvBase"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>% Melhoria Lift vs Controle</h3>
+    <div class="chart-wrap"><canvas id="chartLift"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>% Uso Cartão</h3>
+    <div class="chart-wrap"><canvas id="chartUsoCartao"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <h3>CAC (R$) &amp; Spending médio 1º uso</h3>
+    <div class="chart-wrap"><canvas id="chartCac"></canvas></div>
+  </div>
+</div>
+
+<!-- NISE -->
+<div class="section-title">Por NISE</div>
+<div class="nise-row">
+
+  <div class="nise-card">
+    <div class="nise-header gold">⭐ Gold</div>
+    <div class="nise-chart-wrap"><canvas id="chartGold"></canvas></div>
+    <div class="nise-metrics">
+      <div class="nise-metric">
+        <div class="nm-label">CAC</div>
+        <div class="nm-vals">
+          <div class="nm-val bau">R$108<small>BAU</small></div>
+          <div class="nm-val cmb">R$89<small>Combo ✓</small></div>
+          <div class="nm-val sce">R$113<small>Sem CE</small></div>
+        </div>
+      </div>
+      <div class="nise-metric">
+        <div class="nm-label">% Melhoria Lift</div>
+        <div class="nm-vals">
+          <div class="nm-val bau">+24%<small>BAU</small></div>
+          <div class="nm-val cmb">+19%<small>Combo</small></div>
+          <div class="nm-val sce">+22%<small>Sem CE</small></div>
+        </div>
+      </div>
+      <div class="nise-metric">
+        <div class="nm-label">Spending 1º Uso</div>
+        <div class="nm-vals">
+          <div class="nm-val ctrl">R$767<small>Ctrl</small></div>
+          <div class="nm-val bau">R$647<small>BAU</small></div>
+          <div class="nm-val cmb">R$690<small>Combo</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nise-card">
+    <div class="nise-header plat">💎 Platinum</div>
+    <div class="nise-chart-wrap"><canvas id="chartPlat"></canvas></div>
+    <div class="nise-metrics">
+      <div class="nise-metric">
+        <div class="nm-label">CAC</div>
+        <div class="nm-vals">
+          <div class="nm-val bau">R$79<small>BAU</small></div>
+          <div class="nm-val cmb">R$72<small>Combo ✓</small></div>
+          <div class="nm-val sce">R$77<small>Sem CE</small></div>
+        </div>
+      </div>
+      <div class="nise-metric">
+        <div class="nm-label">% Melhoria Lift</div>
+        <div class="nm-vals">
+          <div class="nm-val bau">+38%<small>BAU</small></div>
+          <div class="nm-val cmb">+28%<small>Combo</small></div>
+          <div class="nm-val sce">+38%<small>Sem CE</small></div>
+        </div>
+      </div>
+      <div class="nise-metric">
+        <div class="nm-label">Spending 1º Uso</div>
+        <div class="nm-vals">
+          <div class="nm-val ctrl">R$750<small>Ctrl</small></div>
+          <div class="nm-val cmb">R$852<small>Combo ✓</small></div>
+          <div class="nm-val bau">R$837<small>BAU</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TABELA COMPLETA -->
+<div class="section-title">Tabela completa</div>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Métrica</th>
+      <th>Controle</th>
+      <th class="c1">Cupom 50 – BAU</th>
+      <th class="c2">Cupom 50 – Combo</th>
+      <th class="c3">Cupom 50 – Sem CE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="sep-row"><td colspan="5">Base e funil</td></tr>
+    <tr><td>Qtd. Base</td><td>355.778</td><td>2.456.144</td><td>2.112.058</td><td>2.115.651</td></tr>
+    <tr><td>% Entrada Fluxo</td><td>15,13%</td><td>15,46%</td><td>15,34%</td><td>15,39%</td></tr>
+    <tr><td>% Conv – Fluxo</td><td>5,00%</td><td class="best">5,81%</td><td>5,56%</td><td>5,76%</td></tr>
+    <tr><td>% Conv – BASE</td><td>0,76%</td><td class="best">0,90%</td><td>0,85%</td><td>0,89%</td></tr>
+    <tr class="sep-row"><td colspan="5">Comportamento</td></tr>
+    <tr><td>% Uso Cartão</td><td>43,7%</td><td class="best">54,3%</td><td>49,7%</td><td>53,0%</td></tr>
+    <tr><td>% Uso Cupom</td><td>—</td><td class="best">73,57%</td><td>55,17%</td><td>72,92%</td></tr>
+    <tr class="sep-row"><td colspan="5">Lifting</td></tr>
+    <tr><td>Lift (p.p.)</td><td>—</td><td><span class="pill-lift">+0,14pp</span></td><td><span class="pill-lift">+0,10pp</span></td><td><span class="pill-lift">+0,13pp</span></td></tr>
+    <tr><td>% Melhoria Lift</td><td>—</td><td class="best">+19%</td><td>+13%</td><td>+17%</td></tr>
+    <tr><td>Qtd. Incremental</td><td>—</td><td class="best">3.492</td><td>2.034</td><td>2.737</td></tr>
+    <tr class="sep-row"><td colspan="5">Custo e spending</td></tr>
+    <tr><td>CAC</td><td>—</td><td>R$ 127</td><td><span class="pill-cac">R$ 122 ✓</span></td><td>R$ 133</td></tr>
+    <tr><td>Spending médio 1º uso</td><td>R$ 747</td><td>R$ 628</td><td>R$ 663</td><td>R$ 647</td></tr>
+  </tbody>
+</table>
+</div>
+
+<footer>SBOX_CREDITSTC / WHOWNER &nbsp;|&nbsp; 08/04/2026 – 30/04/2026</footer>
+
+<script>
+Chart.register(ChartDataLabels);
+
+const CTRL  = '#94a3b8';
+const BAU   = '#3b82f6';
+const COMBO = '#10b981';
+const SCE   = '#f43f5e';
+const LABELS = ['Controle','BAU','Combo','Sem CE'];
+const COLORS = [CTRL, BAU, COMBO, SCE];
+
+const dlabels = fmt => ({
+  anchor: 'end',
+  align: 'end',
+  offset: 2,
+  color: '#e8e8e8',
+  font: { size: 11, weight: '700' },
+  formatter: fmt
+});
+
+const opts = (yLabel, fmt) => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: { top: 24 } },
+  plugins: {
+    legend: { display: false },
+    datalabels: dlabels(fmt || (v => v)),
+    tooltip: {
+      backgroundColor: '#1a1a1a',
+      borderColor: '#333',
+      borderWidth: 1,
+      titleColor: '#aaa',
+      bodyColor: '#fff',
+      callbacks: { label: ctx => fmt ? fmt(ctx.raw) : ctx.raw }
+    }
+  },
+  scales: {
+    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#555' } },
+    y: {
+      grid: { color: '#1a1a1a' },
+      ticks: { font: { size: 10 }, color: '#555', callback: v => yLabel === '%' ? v+'%' : 'R$'+v }
+    }
+  }
+});
+
+const bar = (id, data, yLabel, fmt) => new Chart(document.getElementById(id), {
+  type: 'bar',
+  data: {
+    labels: LABELS,
+    datasets: [{
+      data,
+      backgroundColor: COLORS,
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: opts(yLabel, fmt)
+});
+
+bar('chartConvBase', [0.76, 0.90, 0.85, 0.89], '%', v => v+'%');
+bar('chartLift',     [0, 19, 13, 17], '%', v => v ? '+'+v+'%' : '—');
+bar('chartUsoCartao',[43.7, 54.3, 49.7, 53.0], '%', v => v+'%');
+
+// CAC + Spending – grouped
+new Chart(document.getElementById('chartCac'), {
+  type: 'bar',
+  data: {
+    labels: ['BAU','Combo','Sem CE'],
+    datasets: [
+      {
+        label: 'CAC',
+        data: [127, 122, 133],
+        backgroundColor: [BAU, COMBO, SCE],
+        borderRadius: 6,
+        borderSkipped: false
+      },
+      {
+        label: 'Spending 1º uso',
+        data: [628, 663, 647],
+        backgroundColor: [BAU+'44', COMBO+'44', SCE+'44'],
+        borderRadius: 6,
+        borderSkipped: false
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, color: '#666' } },
+      datalabels: { anchor: 'end', align: 'end', offset: 2, color: '#e8e8e8', font: { size: 10, weight: '700' }, formatter: v => 'R$'+v },
+      tooltip: { backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1, titleColor: '#aaa', bodyColor: '#fff' }
+    },
+    layout: { padding: { top: 24 } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#555' } },
+      y: { grid: { color: '#1a1a1a' }, ticks: { font: { size: 10 }, color: '#555', callback: v => 'R$'+v } }
+    }
+  }
+});
+
+const niseOpts = (id, data) => new Chart(document.getElementById(id), {
+  type: 'bar',
+  data: { labels: LABELS, datasets: [{ data, backgroundColor: COLORS, borderRadius: 6, borderSkipped: false }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: true, text: '% Conv – BASE', font: { size: 10 }, color: '#555', padding: { bottom: 8 } },
+      datalabels: { anchor: 'end', align: 'end', offset: 2, color: '#e8e8e8', font: { size: 11, weight: '700' }, formatter: v => v+'%' },
+      tooltip: { backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1, titleColor: '#aaa', bodyColor: '#fff', callbacks: { label: ctx => ctx.raw + '%' } }
+    },
+    layout: { padding: { top: 24 } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#555' } },
+      y: { grid: { color: '#1a1a1a' }, ticks: { font: { size: 10 }, color: '#555', callback: v => v+'%' } }
+    }
+  }
+});
+
+niseOpts('chartGold', [0.78, 0.97, 0.93, 0.95]);
+niseOpts('chartPlat', [0.40, 0.55, 0.51, 0.55]);
+</script>
+</body>
+</html>
