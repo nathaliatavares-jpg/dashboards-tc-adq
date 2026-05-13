@@ -105,56 +105,13 @@ tbody td:first-child{text-align:left;font-weight:500;color:var(--accent2);}
       <div class="kpi-sub" id="focusWorstSub">—</div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-    <div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">
-      <span style="font-weight:700;color:var(--green)">✅ Crescem em março</span><br>
-      · EA +44% — ritmo consistente desde dez/25<br>
-      · PUSH_ML_ENCENDIDO_D1 +101% — recorde histórico<br>
-      · HOME_MINICARD_RESTYLING +23% — recuperação pós-dez<br>
-      · One Page +12% · PUSH genérico +24%
-    </div>
-    <div style="background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">
-      <span style="font-weight:700;color:var(--red)">⚠️ Atenção em março</span><br>
-      · CHO - Checkout ML -15% — não recuperou do dez<br>
-      · VIP -14% — 2º mês de queda<br>
-      · MP_HOME_ANITTA: zerou — campanha encerrada<br>
-      · QA_NBT_TEST: sumiu — confirme se era real
-    </div>
-    <div style="background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">
-      <span style="font-weight:700;color:var(--accent)">👀 Monitorar</span><br>
-      · Bottom Sheet estável — 0% MoM · sinal de teto?<br>
-      · BANNER_DASHBOARD: -99% desde jun/25 — morto<br>
-      · HOME_MINICARD legado: 203 usuários — morto<br>
-      · DRAWER_ML: 202 — queda de 96% desde out/25
-    </div>
-  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;" id="focusInsightBoxes"></div>
 </div>
 
 <!-- ===== SEÇÃO 1: VISÃO GERAL ===== -->
 <h2>① Visão Geral — Evolução de Placements</h2>
 
-<div class="grid-4">
-  <div class="card">
-    <div class="kpi-label">Total Convertidos (período)</div>
-    <div class="kpi-value">5,478,282</div>
-    <div class="kpi-sub">Jan/25 → Mar/26</div>
-  </div>
-  <div class="card">
-    <div class="kpi-label">Melhor Mês Histórico</div>
-    <div class="kpi-value">570,880</div>
-    <div class="kpi-sub">Nov/2025 <span class="kpi-up">▲ pico</span></div>
-  </div>
-  <div class="card">
-    <div class="kpi-label">Mar/26 vs Fev/26</div>
-    <div class="kpi-value" style="color:var(--green)">+10,6%</div>
-    <div class="kpi-sub">503k → 557k — acelerando</div>
-  </div>
-  <div class="card">
-    <div class="kpi-label">Crescimento Jan/25→Mar/26</div>
-    <div class="kpi-value" style="color:var(--green)">+174%</div>
-    <div class="kpi-sub">202k → 557k usuários/mês</div>
-  </div>
-</div>
+<div class="grid-4" id="visaoGeralKpis"></div>
 
 <div class="card" style="margin-bottom:20px">
   <div class="chart-title">Total de usuários convertidos por mês</div>
@@ -185,17 +142,7 @@ tbody td:first-child{text-align:left;font-weight:500;color:var(--accent2);}
   </div>
   <div class="card">
     <div class="chart-title">Insights — placements</div>
-    <ul class="insight-list">
-      <li><span class="icon">🚀</span><div><span class="tag tag-ok">MAR/26 #1</span><strong>HOME_MINICARD_RESTYLING — líder absoluto.</strong> 112.834 usuários (+23% vs fev). É o maior canal do portfólio desde ago/25 e não dá sinais de desaceleração.</div></li>
-      <li><span class="icon">⚡</span><div><span class="tag tag-ok">MAR/26 ACELEROU</span><strong>EA — 102k em mar/26, era zero em dez/25.</strong> +44% MoM pelo 3º mês seguido. Tendência clara de escala — deve ultrapassar MINICARD em 2-3 meses se mantiver ritmo.</div></li>
-      <li><span class="icon">📈</span><div><span class="tag tag-ok">RECORDE</span><strong>PUSH_ML_ENCENDIDO_D1 — +101% em março.</strong> 16.138 usuários, maior valor histórico. É o melhor canal de push ativo, com consistência desde abr/25.</div></li>
-      <li><span class="icon">📊</span><div><span class="tag tag-watch">ATENÇÃO</span><strong>CHO - Checkout ML — -15% em março.</strong> Era o 2º canal (87k em nov/25), caiu para 57k. Não recuperou pós-queda de dez/25. Avaliar se é sazonalidade ou mudança estrutural.</div></li>
-      <li><span class="icon">➡️</span><div><span class="tag tag-info">ESTÁVEL</span><strong>Bottom Sheet — flat em março.</strong> 50.459 → 50.482 (+0,04%). Estabilizou mas longe do pico (75k em jun/25). Pode estar próximo do teto atual.</div></li>
-      <li><span class="icon">📉</span><div><span class="tag tag-alert">PAROU</span><strong>BANNER_DASHBOARD — praticamente morto.</strong> 365 usuários em mar/26, era 41k em jun/25. Queda de 99% em 9 meses. Descontinuado?</div></li>
-      <li><span class="icon">📉</span><div><span class="tag tag-alert">PAROU</span><strong>HOME_MINICARD_MP legado — 203 usuários.</strong> Substituído pela versão RESTYLING. Pode ser arquivado.</div></li>
-      <li><span class="icon">📉</span><div><span class="tag tag-alert">PAROU</span><strong>MP_HOME_ANITTA — zerou em março.</strong> Campanha encerrada. Picou em 66k (jul/25), agora sem impacto.</div></li>
-      <li><span class="icon">🔎</span><div><span class="tag tag-watch">INVESTIGAR</span><strong>VIP -14% em março</strong> — 2º mês consecutivo de queda. Era 9.8k em nov/25, caiu para 6.7k. Mudança de tráfego ou de elegibilidade?</div></li>
-    </ul>
+    <ul class="insight-list" id="insightListMain"></ul>
   </div>
 </div>
 
@@ -297,27 +244,27 @@ tbody td:first-child{text-align:left;font-weight:500;color:var(--accent2);}
 // =================== DADOS ===================
 // ===== DATA =====
 const MESES_LABEL = ["Jan/25","Fev/25","Mar/25","Abr/25","Mai/25","Jun/25","Jul/25","Ago/25","Set/25","Out/25","Nov/25","Dez/25","Jan/26","Fev/26","Mar/26","Abr/26","Mai/26"];
-const TOTAL_MES = [115624,217168,304254,361903,395047,538692,602055,538827,513853,586892,621689,388873,495094,507811,619500,556624,295582];
+const TOTAL_MES = [115624,217168,304254,361903,395047,538692,602055,538827,513853,586892,621689,388873,495094,507811,619500,556625,300373];
 const PIVOT = {
-  "One Page":[23211,36707,55131,55076,57782,75368,82998,74612,66739,60640,67864,45716,50569,51265,64943,56992,26467],
-  "Bottom Sheet":[19128,27255,50716,54558,56168,75276,75512,64928,58409,61942,72857,41228,46866,50459,55434,45692,23284],
-  "HOME_MINICARD_MP_RESTYLING":[null,null,null,null,null,null,null,1543,16741,94371,130763,95727,109639,91783,124925,96843,43182],
-  "CHO - CHECKOUT ML":[null,null,80,18233,20381,66841,71742,59417,57142,68896,87455,51567,56244,66512,62307,55671,27337],
-  "Onboarding":[5185,7865,15224,18417,21382,29545,37143,41263,44873,59413,54130,31155,36495,34175,40363,32637,12052],
-  "EA":[null,null,null,null,null,null,null,null,null,null,null,3208,34917,70751,105631,117456,104593],
+  "One Page":[23211,36707,55131,55076,57782,75368,82998,74612,66739,60640,67864,45716,50569,51265,64943,56992,27144],
+  "Bottom Sheet":[19128,27255,50716,54558,56168,75276,75512,64928,58409,61942,72857,41228,46866,50459,55434,45692,23896],
+  "HOME_MINICARD_MP_RESTYLING":[null,null,null,null,null,null,null,1543,16741,94371,130763,95727,109639,91783,124925,96843,44070],
+  "CHO - CHECKOUT ML":[null,null,80,18233,20381,66841,71742,59417,57142,68896,87455,51567,56244,66512,62307,55671,28069],
+  "Onboarding":[5185,7865,15224,18417,21382,29545,37143,41263,44873,59413,54130,31155,36495,34175,40363,32637,12231],
+  "EA":[null,null,null,null,null,null,null,null,null,null,null,3208,34917,70751,105631,117456,104905],
   "HOME_MINICARD_MP":[11578,24216,34231,35878,43960,42039,41548,37118,31234,18669,5397,736,405,289,216,69,42],
   "BANNER_DASHBOARD":[9789,18865,27620,31612,38586,41629,40859,31851,32762,24182,6846,1110,535,369,406,127,64],
   "MP_HOME_ANITTA":[null,null,null,3823,12785,55425,66545,59170,51509,33002,14,2,1,1,null,null,null],
-  "PUSH":[3696,17319,24581,17846,17268,11048,10266,9861,10079,7937,7871,4784,8760,8153,10336,7003,4485],
-  "PUSH_ML_ENCENDIDO_D1":[223,4210,5859,13640,9771,8388,14090,9825,9029,10436,5683,3594,11397,8034,16145,17869,3167],
-  "CARDS_LISTING_RESTYLING_FULL_TC":[null,null,null,null,null,null,null,215,104,14239,20532,15276,20864,22363,23857,19767,9151],
-  "VIP":[2780,8596,5629,4797,4784,7330,7579,7528,6371,5873,9827,6422,6403,7752,7592,6456,2949],
-  "PDP":[2250,6323,4095,3111,2882,4112,4191,4633,3956,4624,9912,5612,5238,5976,6330,5030,2195],
+  "PUSH":[3696,17319,24581,17846,17268,11048,10266,9861,10079,7937,7871,4784,8760,8153,10336,7004,4633],
+  "PUSH_ML_ENCENDIDO_D1":[223,4210,5859,13640,9771,8388,14090,9825,9029,10436,5683,3594,11397,8034,16145,17869,3309],
+  "CARDS_LISTING_RESTYLING_FULL_TC":[null,null,null,null,null,null,null,215,104,14239,20532,15276,20864,22363,23857,19767,9317],
+  "VIP":[2780,8596,5629,4797,4784,7330,7579,7528,6371,5873,9827,6422,6403,7752,7592,6456,3043],
+  "PDP":[2250,6323,4095,3111,2882,4112,4191,4633,3956,4624,9912,5612,5238,5976,6330,5030,2266],
   "PUSH_ML_D10":[1565,1818,2028,5424,8505,9351,4927,3943,2987,2332,2625,1989,3009,5138,8640,4656,12],
-  "CARDS_LISTING_RESTYLING_MICRO_TC":[null,null,null,null,null,null,null,94,42,10106,10253,8153,10567,7061,7792,6929,3327],
-  "MODAL_DE_PAGOS":[null,1697,3211,3390,3398,3922,4669,4631,4676,5099,7633,4406,4167,3815,4267,3425,1521],
+  "CARDS_LISTING_RESTYLING_MICRO_TC":[null,null,null,null,null,null,null,94,42,10106,10253,8153,10567,7061,7792,6929,3403],
+  "MODAL_DE_PAGOS":[null,1697,3211,3390,3398,3922,4669,4631,4676,5099,7633,4406,4167,3815,4267,3425,1560],
   "QA_NBT_TEST":[null,4521,6693,4981,568,65,12011,15410,13033,1416,1162,518,null,null,null,null,null],
-  "DRAWER_ML":[1087,1319,1284,4409,6084,6410,1465,4552,6978,6492,6849,3850,2409,964,227,153,63],
+  "DRAWER_ML":[1087,1319,1284,4409,6084,6410,1465,4552,6978,6492,6849,3850,2409,964,227,153,65],
   "VIP_WEB":[null,null,null,null,null,null,1,3644,7836,7186,8576,5115,4820,5379,5998,3675,3],
   "PUSH_FLOWS_ENC_ENG":[null,null,null,null,null,815,8555,5837,6726,5470,5551,2653,4443,3972,2448,3481,1136],
   "WAITLIST_APPROVED_PUSH":[3,8,4167,4473,4238,10181,8268,6039,724,2831,1888,1477,1276,845,624,341,3],
@@ -326,9 +273,9 @@ const PIVOT = {
   "BARRIDA_PENDING_ML":[740,9090,10759,7935,74,219,55,125,84,122,64,34,2820,4521,3369,4483,213],
   "WAITLIST_APPROVED_HERMES":[3,14,3328,3674,4549,6466,6347,5454,3837,2808,1869,1378,1244,1171,652,441,243],
   "PUSH_ML_CHECKOUT":[1019,2237,3326,3123,1481,1714,1229,755,2345,2853,3055,2744,3207,3879,4172,2908,2149],
-  "PUSH_FLOWS_ENC_ACT":[null,null,null,null,null,642,3770,3634,3963,4582,3640,1960,2136,2382,1734,1712,473],
+  "PUSH_FLOWS_ENC_ACT":[null,null,null,null,null,642,3770,3634,3963,4582,3640,1960,2136,2382,1734,1712,481],
   "CREDIT_SCORING_PRODUCTS":[441,832,1769,2032,2883,3426,2840,2064,2614,3015,4449,1593,607,457,604,128,null],
-  "CREDIT_NUMERIC_SCORING":[null,null,null,null,null,null,null,null,null,null,194,3417,7120,5263,5510,4060,1928]
+  "CREDIT_NUMERIC_SCORING":[null,null,null,null,null,null,null,null,null,null,194,3417,7120,5263,5510,4060,1975]
 };
 // ===== END DATA =====
 
@@ -394,6 +341,127 @@ MOM_DATA.sort((a,b) => b.mom - a.mom);
     document.getElementById('focusWorstSub').textContent  = '▼ ' + worst.mom + '% · ' + fmt(worst.prev) + ' → ' + fmt(worst.cur);
     document.getElementById('focusWorstSub').className    = 'kpi-sub kpi-down';
   }
+})();
+
+// ── CAIXAS DE INSIGHT (dinâmicas) ────────────────────────────────────────────
+(function() {
+  var growers = MOM_DATA.filter(function(d){return d.mom > 0 && d.cur > 100;}).slice(0,5);
+  var fallers = MOM_DATA.filter(function(d){return d.mom < 0 && d.prev > 100;})
+                        .sort(function(a,b){return a.mom - b.mom;}).slice(0,5);
+  var allVals = Object.entries(PIVOT).map(function(e){
+    var peak = Math.max.apply(null, e[1].map(function(x){return x||0;}));
+    return {k:e[0], cur:e[1][_N-1]||0, prev:e[1][_N-2]||0, peak:peak};
+  });
+  var dead = allVals.filter(function(d){return d.cur < 10 && d.peak > 500;})
+                    .sort(function(a,b){return b.peak - a.peak;}).slice(0,3);
+  var stable = MOM_DATA.filter(function(d){return Math.abs(d.mom) <= 2 && d.cur > 500;}).slice(0,2);
+
+  var boxGrow = growers.map(function(d){
+    return '· ' + d.label + ' ' + (d.mom>=0?'+':'') + d.mom + '% — ' + fmt(d.prev) + ' → ' + fmt(d.cur);
+  }).join('<br>') || '· Sem crescimentos relevantes';
+
+  var boxFall = fallers.map(function(d){
+    return '· ' + d.label + ' ' + d.mom + '% — ' + fmt(d.prev) + ' → ' + fmt(d.cur);
+  }).join('<br>') || '· Sem quedas relevantes';
+
+  var monLines = stable.map(function(d){
+    return '· ' + d.label + ' estável (' + (d.mom>=0?'+':'') + d.mom + '% MoM)';
+  }).concat(dead.map(function(d){
+    return '· ' + d.k + ': ' + fmt(d.cur) + ' — pico ' + fmt(d.peak) + ' — morto?';
+  }));
+  var boxMon = monLines.join('<br>') || '· Sem alertas';
+
+  document.getElementById('focusInsightBoxes').innerHTML =
+    '<div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">' +
+      '<span style="font-weight:700;color:var(--green)">✅ Crescem em ' + _curLbl + '</span><br>' + boxGrow +
+    '</div>' +
+    '<div style="background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">' +
+      '<span style="font-weight:700;color:var(--red)">⚠️ Atenção em ' + _curLbl + '</span><br>' + boxFall +
+    '</div>' +
+    '<div style="background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.25);border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.55;">' +
+      '<span style="font-weight:700;color:var(--accent)">👀 Monitorar</span><br>' + boxMon +
+    '</div>';
+})();
+
+// ── KPIs VISÃO GERAL (dinâmicos) ─────────────────────────────────────────────
+(function() {
+  var totalPeriodo = TOTAL_MES.reduce(function(a,b){return a+(b||0);}, 0);
+  var peakVal = Math.max.apply(null, TOTAL_MES);
+  var peakIdx = TOTAL_MES.indexOf(peakVal);
+  var peakLbl = MESES_LABEL[peakIdx] || '';
+  var curTotal  = TOTAL_MES[_N-1] || 0;
+  var prevTotal = TOTAL_MES[_N-2] || 0;
+  var firstTotal= TOTAL_MES[0]    || 0;
+  var mom    = prevTotal  > 0 ? (curTotal  - prevTotal)  / prevTotal  * 100 : 0;
+  var growth = firstTotal > 0 ? (curTotal  - firstTotal) / firstTotal * 100 : 0;
+  var momSign  = mom    >= 0 ? '+' : '';
+  var growSign = growth >= 0 ? '+' : '';
+  var momColor  = mom    >= 0 ? 'var(--green)' : 'var(--red)';
+  var growColor = growth >= 0 ? 'var(--green)' : 'var(--red)';
+  var momTrend  = mom >= 2 ? 'acelerando' : mom <= -2 ? 'desacelerando' : 'estável';
+
+  document.getElementById('visaoGeralKpis').innerHTML =
+    '<div class="card"><div class="kpi-label">Total Convertidos (período)</div>' +
+      '<div class="kpi-value">' + fmt(totalPeriodo) + '</div>' +
+      '<div class="kpi-sub">' + MESES_LABEL[0] + ' → ' + _curLbl + '</div></div>' +
+    '<div class="card"><div class="kpi-label">Melhor Mês Histórico</div>' +
+      '<div class="kpi-value">' + fmt(peakVal) + '</div>' +
+      '<div class="kpi-sub">' + peakLbl + ' <span class="kpi-up">▲ pico</span></div></div>' +
+    '<div class="card"><div class="kpi-label">' + _curLbl + ' vs ' + _prevLbl + '</div>' +
+      '<div class="kpi-value" style="color:' + momColor + '">' + momSign + mom.toFixed(1).replace('.',',') + '%</div>' +
+      '<div class="kpi-sub">' + fmt(prevTotal) + ' → ' + fmt(curTotal) + ' — ' + momTrend + '</div></div>' +
+    '<div class="card"><div class="kpi-label">Crescimento ' + MESES_LABEL[0] + '→' + _curLbl + '</div>' +
+      '<div class="kpi-value" style="color:' + growColor + '">' + growSign + Math.round(growth) + '%</div>' +
+      '<div class="kpi-sub">' + fmt(firstTotal) + ' → ' + fmt(curTotal) + ' usuários/mês</div></div>';
+})();
+
+// ── LISTA DE INSIGHTS (dinâmica) ──────────────────────────────────────────────
+(function() {
+  var el = document.getElementById('insightListMain');
+  if (!el) return;
+  var byVol = Object.entries(PIVOT)
+    .map(function(e){return {k:e[0], cur:e[1][_N-1]||0, prev:e[1][_N-2]||0};})
+    .filter(function(d){return d.cur > 0;})
+    .sort(function(a,b){return b.cur - a.cur;});
+  var leader    = byVol[0];
+  var growers   = MOM_DATA.filter(function(d){return d.mom > 0 && d.cur > 200;}).slice(0,3);
+  var fallers   = MOM_DATA.filter(function(d){return d.mom < -10 && d.prev > 500;})
+                          .sort(function(a,b){return a.mom-b.mom;}).slice(0,2);
+  var stableArr = MOM_DATA.filter(function(d){return Math.abs(d.mom) <= 2 && d.cur > 1000;}).slice(0,1);
+  var deadArr   = Object.entries(PIVOT).map(function(e){
+    var peak = Math.max.apply(null, e[1].map(function(x){return x||0;}));
+    return {k:e[0], cur:e[1][_N-1]||0, peak:peak};
+  }).filter(function(d){return d.cur < 10 && d.peak > 1000;})
+    .sort(function(a,b){return b.peak-a.peak;}).slice(0,2);
+
+  var html = '';
+  if (leader) {
+    var lm = MOM_DATA.find(function(d){return d.label===leader.k;});
+    html += '<li><span class="icon">🚀</span><div><span class="tag tag-ok">' + _curLbl + ' #1</span>' +
+      '<strong>' + leader.k + ' — líder absoluto.</strong> ' + fmt(leader.cur) + ' usuários' +
+      (lm ? ' (' + (lm.mom>=0?'+':'') + lm.mom + '% vs ' + _prevLbl + ')' : '') + '.</div></li>';
+  }
+  growers.forEach(function(d) {
+    html += '<li><span class="icon">⚡</span><div><span class="tag tag-ok">ACELEROU</span>' +
+      '<strong>' + d.label + ' — +' + d.mom + '% MoM em ' + _curLbl + '.</strong> ' +
+      fmt(d.prev) + ' → ' + fmt(d.cur) + '.</div></li>';
+  });
+  fallers.forEach(function(d) {
+    html += '<li><span class="icon">📊</span><div><span class="tag tag-watch">ATENCAO</span>' +
+      '<strong>' + d.label + ' — ' + d.mom + '% em ' + _curLbl + '.</strong> ' +
+      fmt(d.prev) + ' → ' + fmt(d.cur) + '. Verificar causa.</div></li>';
+  });
+  stableArr.forEach(function(d) {
+    html += '<li><span class="icon">➡️</span><div><span class="tag tag-info">ESTAVEL</span>' +
+      '<strong>' + d.label + ' — flat em ' + _curLbl + '.</strong> ' +
+      fmt(d.cur) + ' usuários (' + (d.mom>=0?'+':'') + d.mom + '% MoM).</div></li>';
+  });
+  deadArr.forEach(function(d) {
+    html += '<li><span class="icon">📉</span><div><span class="tag tag-alert">PAROU</span>' +
+      '<strong>' + d.k + ' — ' + fmt(d.cur) + ' usuários em ' + _curLbl + '.</strong> ' +
+      'Pico histórico: ' + fmt(d.peak) + '. Possível descontinuação.</div></li>';
+  });
+  el.innerHTML = html || '<li><span class="icon">ℹ️</span><div>Sem dados suficientes para gerar insights.</div></li>';
 })();
 
 // Estático — comunicações únicas (tabela separada, atualizar manualmente)
