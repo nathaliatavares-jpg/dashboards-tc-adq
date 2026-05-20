@@ -19,28 +19,44 @@
   .header p  { font-size: 13px; opacity: 0.85; }
   .header .meta { text-align: right; font-size: 12px; opacity: 0.85; line-height: 1.7; }
 
-  .container { max-width: 1300px; margin: 0 auto; padding: 24px 20px; }
+  .container { max-width: 1380px; margin: 0 auto; padding: 24px 20px; }
 
+  /* análise toggle */
+  .analise-bar {
+    background: white; border-radius: 10px; padding: 14px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .analise-label { font-size: 12px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: .4px; }
+  .analise-btn {
+    padding: 7px 20px; border: 2px solid #dde; border-radius: 8px;
+    font-size: 13px; font-weight: 700; cursor: pointer; background: white; color: #666;
+    transition: all .15s;
+  }
+  .analise-btn:hover { border-color: #009ee3; color: #009ee3; }
+  .analise-btn.active.total  { background: #009ee3; border-color: #009ee3; color: white; }
+  .analise-btn.active.mp     { background: #00a650; border-color: #00a650; color: white; }
+  .analise-btn.active.ml     { background: #6c47c9; border-color: #6c47c9; color: white; }
+
+  /* filtros */
   .filters {
-    background: white; border-radius: 10px; padding: 16px 20px;
+    background: white; border-radius: 10px; padding: 14px 20px;
     box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 20px;
-    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
   }
   .filter-group { display: flex; align-items: center; gap: 8px; }
   .filter-label { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
   .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
   .btn-filter {
-    padding: 5px 12px; border: 1.5px solid #dde; border-radius: 6px;
+    padding: 4px 11px; border: 1.5px solid #dde; border-radius: 6px;
     font-size: 12px; font-weight: 600; cursor: pointer; background: white;
     color: #666; transition: all .15s; white-space: nowrap;
   }
   .btn-filter:hover  { border-color: #009ee3; color: #009ee3; }
   .btn-filter.active { background: #009ee3; border-color: #009ee3; color: white; }
-  .btn-filter.todos  { background: #f4f5f7; color: #999; border-color: #dde; }
-  .btn-filter.todos.active { background: #009ee3; border-color: #009ee3; color: white; }
+  .sep { width: 1px; height: 30px; background: #eee; flex-shrink: 0; }
 
-  .sep { width: 1px; height: 32px; background: #eee; flex-shrink: 0; }
-
+  /* KPIs */
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
   .kpi-card {
     background: white; border-radius: 10px; padding: 14px 16px;
@@ -60,7 +76,6 @@
   .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
   .card h2 { font-size: 14px; font-weight: 600; color: #444; }
   .card .sub { font-size: 11px; color: #aaa; margin-bottom: 16px; }
-
   .toggle-pct {
     padding: 4px 10px; border: 1.5px solid #dde; border-radius: 5px;
     font-size: 11px; font-weight: 600; cursor: pointer; background: white; color: #666;
@@ -76,6 +91,11 @@
   tbody td:first-child { text-align: left; font-weight: 600; }
   tfoot td { padding: 7px 10px; font-weight: 700; background: #f0f6fb; text-align: right; border-top: 2px solid #dde8f0; }
   tfoot td:first-child { text-align: left; }
+
+  #analiseIndicator {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 700; margin-left: 8px; vertical-align: middle;
+  }
 </style>
 </head>
 <body>
@@ -83,15 +103,23 @@
 <div class="header">
   <div>
     <h1>TC Aquisição — Distribuição de Comunicações por Safra</h1>
-    <p>Quantidade de comunicações recebidas por proposta, agrupada pelo mês de criação</p>
+    <p>Janela: data_encendido → data aceite/cancelamento (pending: apenas >= encendido) | Site: MLB</p>
   </div>
   <div class="meta">
-    Período: 01/01/2026 – 18/05/2026 | Site: MLB<br>
-    Fonte: BT_CCARD_PROPOSAL × BT_OC_CUST_EVENT × SCORE_PROPOSTAS_CCARD
+    Período: 01/01/2026 – 20/05/2026<br>
+    Fonte: BT_CCARD_PROPOSAL × BT_OC_CUST_EVENT × SCORE_PROPOSTAS_CCARD × CONGRATS
   </div>
 </div>
 
 <div class="container">
+
+  <!-- Toggle Análise -->
+  <div class="analise-bar">
+    <span class="analise-label">Analisar comunicações:</span>
+    <button class="analise-btn active total" data-mode="total">📊 Total</button>
+    <button class="analise-btn mp"           data-mode="mp">📱 Apenas MP</button>
+    <button class="analise-btn ml"           data-mode="ml">🛒 Apenas ML</button>
+  </div>
 
   <!-- Filtros -->
   <div class="filters">
@@ -118,9 +146,18 @@
       <div class="btn-group" id="grpApp">
         <button class="btn-filter active" data-val="todos">Todos</button>
         <button class="btn-filter" data-val="1. MP">MP</button>
-        <button class="btn-filter" data-val="2. MP y ML">MP + ML</button>
+        <button class="btn-filter" data-val="2. MP y ML">MP+ML</button>
         <button class="btn-filter" data-val="3. ML">ML</button>
         <button class="btn-filter" data-val="4. Sem App Ativo">Sem App</button>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="filter-group">
+      <span class="filter-label">Placement:</span>
+      <div class="btn-group" id="grpEA">
+        <button class="btn-filter active" data-val="todos">Todos</button>
+        <button class="btn-filter" data-val="EA-MP">EA-MP</button>
+        <button class="btn-filter" data-val="Outros">Outros</button>
       </div>
     </div>
   </div>
@@ -133,7 +170,7 @@
       <div class="kpi-sub">na seleção atual</div>
     </div>
     <div class="kpi-card green">
-      <div class="kpi-label">Sem Comunicação</div>
+      <div class="kpi-label">Sem Comunicação <span id="analiseIndicator"></span></div>
       <div class="kpi-value" id="kpiSem">—</div>
       <div class="kpi-sub" id="kpiSemPct">—</div>
     </div>
@@ -149,29 +186,29 @@
     </div>
   </div>
 
-  <!-- Gráfico absoluto/% -->
+  <!-- Gráfico principal -->
   <div class="card">
     <div class="card-header">
       <div>
-        <h2>Distribuição de Comunicações por Safra</h2>
-        <div class="sub">Cada barra = total de propostas da safra, segmentado por faixa de comunicações recebidas</div>
+        <h2>Distribuição por Safra (Mês de Criação da Proposta)</h2>
+        <div class="sub">Comunicações recebidas na janela da proposta — por faixa</div>
       </div>
       <button class="toggle-pct" id="btnPct">Ver em %</button>
     </div>
     <canvas id="chartSafra" height="130"></canvas>
   </div>
 
-  <!-- Gráfico % normalizado -->
+  <!-- Gráfico % -->
   <div class="card">
     <h2>Distribuição % por Safra</h2>
-    <div class="sub">Proporção de cada faixa dentro do total da safra — compara meses com volumes diferentes</div>
+    <div class="sub">Proporção de cada faixa dentro do total da safra</div>
     <canvas id="chartPct" height="130"></canvas>
   </div>
 
   <!-- Tabela -->
   <div class="card">
     <h2>Tabela Detalhada por Safra</h2>
-    <div class="sub">Dados conforme filtros selecionados</div>
+    <div class="sub" id="tabelaSub">—</div>
     <table>
       <thead>
         <tr>
@@ -188,150 +225,250 @@
 </div>
 
 <script>
-// filtro: todos os LIKE — atualizado com campanhas flows_communication_*
+// ── Dados: safra, tipo, grupo, app, ea, sem_t,c13_t,c47_t,c8_t, sem_mp,c13_mp,c47_mp,c8_mp, sem_ml,c13_ml,c47_ml,c8_ml, total
 const RAW = [
-  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:5845,   c13:8137,   c47:4153,   c8:823,    total:18958   },
-  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:37438,  c13:73731,  c47:46114,  c8:23748,  total:181031  },
-  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:31241,  c13:65162,  c47:38389,  c8:9161,   total:143953  },
-  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:7880,   c13:4635,   c47:1307,   c8:304,    total:14126   },
-  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:32762,  c13:43891,  c47:57669,  c8:150082, total:284404  },
-  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:153035, c13:119033, c47:195319, c8:1540342,total:2007729 },
-  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1027926,c13:508178, c47:1011393,c8:4133563,total:6681060 },
-  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:726622, c13:84276,  c47:91557,  c8:174129, total:1076584 },
-  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:4750,   c13:6854,   c47:3715,   c8:379,    total:15698   },
-  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:15764,  c13:40248,  c47:26514,  c8:9504,   total:92030   },
-  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:5943,   c13:17911,  c47:10063,  c8:2682,   total:36599   },
-  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2025,   c13:1834,   c47:568,    c8:131,    total:4558    },
-  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:12509,  c13:21518,  c47:24620,  c8:18134,  total:76781   },
-  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:22857,  c13:35368,  c47:71355,  c8:168313, total:297893  },
-  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:56305,  c13:45495,  c47:146399, c8:143765, total:391964  },
-  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:53640,  c13:9200,   c47:10701,  c8:7618,   total:81159   },
-  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:10305,  c13:7687,   c47:1712,   c8:67,     total:19771   },
-  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:74062,  c13:99666,  c47:38703,  c8:2621,   total:215052  },
-  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:46041,  c13:63867,  c47:20584,  c8:1665,   total:132157  },
-  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:9125,   c13:4753,   c47:1353,   c8:84,     total:15315   },
-  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:53070,  c13:73441,  c47:83726,  c8:105728, total:315965  },
-  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:186068, c13:224531, c47:390154, c8:1341756,total:2142509 },
-  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1263142,c13:1061470,c47:1755872,c8:3304378,total:7384862 },
-  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:1121838,c13:150797, c47:141389, c8:181509, total:1595533 },
-  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:4877,   c13:4157,   c47:1192,   c8:39,     total:10265   },
-  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:18026,  c13:29342,  c47:10085,  c8:1031,   total:58484   },
-  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:9422,   c13:22317,  c47:7194,   c8:212,    total:39145   },
-  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2468,   c13:1905,   c47:338,    c8:9,      total:4720    },
-  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:9719,   c13:16820,  c47:10228,  c8:3376,   total:40143   },
-  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:15920,  c13:36065,  c47:43517,  c8:28179,  total:123681  },
-  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:146462, c13:185770, c47:322742, c8:122717, total:777691  },
-  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:125024, c13:20560,  c47:22379,  c8:6620,   total:174583  },
-  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:12031,  c13:12475,  c47:3891,   c8:555,    total:28952   },
-  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:72820,  c13:136980, c47:57700,  c8:12726,  total:280226  },
-  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:57068,  c13:99025,  c47:24150,  c8:3788,   total:184031  },
-  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:11298,  c13:7366,   c47:1669,   c8:209,    total:20542   },
-  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:55889,  c13:78596,  c47:98048,  c8:98010,  total:330543  },
-  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:186986, c13:256139, c47:470976, c8:1175195,total:2089296 },
-  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1333172,c13:1265237,c47:1972225,c8:2822565,total:7393199 },
-  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:1132073,c13:182785, c47:149808, c8:143910, total:1608576 },
-  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:9650,   c13:6410,   c47:2134,   c8:154,    total:18348   },
-  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:31519,  c13:45433,  c47:12846,  c8:1710,   total:91508   },
-  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:12235,  c13:21204,  c47:4727,   c8:466,    total:38632   },
-  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2288,   c13:1633,   c47:300,    c8:24,     total:4245    },
-  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:15205,  c13:23357,  c47:24679,  c8:6686,   total:69927   },
-  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:29394,  c13:69842,  c47:90850,  c8:61577,  total:251663  },
-  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:155173, c13:252907, c47:193473, c8:57348,  total:658901  },
-  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:46441,  c13:14468,  c47:11279,  c8:4039,   total:76227   },
-  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:11495,  c13:8613,   c47:4875,   c8:914,    total:25897   },
-  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:62883,  c13:84919,  c47:61014,  c8:21629,  total:230445  },
-  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:35727,  c13:58694,  c47:33021,  c8:6190,   total:133632  },
-  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:9209,   c13:4638,   c47:1596,   c8:251,    total:15694   },
-  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:89599,  c13:114202, c47:94186,  c8:41260,  total:339247  },
-  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:242334, c13:424720, c47:751610, c8:833060, total:2251724 },
-  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1473331,c13:1558217,c47:2426918,c8:1914010,total:7372476 },
-  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:775266, c13:127700, c47:126390, c8:62745,  total:1092101 },
-  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:8481,   c13:4816,   c47:1732,   c8:34,     total:15063   },
-  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:32469,  c13:39935,  c47:10985,  c8:1023,   total:84412   },
-  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:13424,  c13:14810,  c47:2619,   c8:121,    total:30974   },
-  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2545,   c13:1364,   c47:208,    c8:8,      total:4125    },
-  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:25818,  c13:32471,  c47:9587,   c8:920,    total:68796   },
-  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:48661,  c13:127436, c47:79066,  c8:21075,  total:276238  },
-  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:193881, c13:319945, c47:180007, c8:21326,  total:715159  },
-  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:112855, c13:21583,  c47:11897,  c8:1261,   total:147596  },
-  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:8788,   c13:2800,   c47:946,    c8:49,     total:12583   },
-  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:58157,  c13:52624,  c47:21132,  c8:946,    total:132859  },
-  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:20075,  c13:29207,  c47:13956,  c8:335,    total:63573   },
-  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:4402,   c13:1398,   c47:388,    c8:5,      total:6193    },
-  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:156254, c13:72966,  c47:23116,  c8:1734,   total:254070  },
-  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:432639, c13:829314, c47:625058, c8:49509,  total:1936520 },
-  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1833306,c13:2888357,c47:2610571,c8:108959, total:7441193 },
-  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:1013492,c13:132328, c47:78698,  c8:2135,   total:1226653 },
-  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:10151,  c13:1016,   c47:258,    c8:1,      total:11426   },
-  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:56090,  c13:10631,  c47:2209,   c8:4,      total:68934   },
-  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:10653,  c13:8945,   c47:1313,   c8:2,      total:20913   },
-  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:1796,   c13:416,    c47:61,     c8:0,      total:2273    },
-  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:35342,  c13:12780,  c47:1804,   c8:2,      total:49928   },
-  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:119892, c13:108588, c47:33075,  c8:52,     total:261607  },
-  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:212942, c13:452745, c47:138303, c8:358,    total:804348  },
-  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:111529, c13:23492,  c47:5615,   c8:14,     total:140650  },
+// Jan 2026
+['2026-01','FULL','aceito','1. MP','EA-MP',18837,50,16,0,18838,51,14,0,18895,7,1,0,18903],
+['2026-01','FULL','aceito','1. MP','Outros',54,0,1,0,54,0,1,0,54,1,0,0,55],
+['2026-01','FULL','aceito','2. MP y ML','EA-MP',178682,545,180,70,178810,506,115,46,179086,367,21,3,179477],
+['2026-01','FULL','aceito','2. MP y ML','Outros',1542,10,2,1,1545,8,1,1,1546,7,2,0,1555],
+['2026-01','FULL','aceito','3. ML','EA-MP',140996,790,322,75,141922,199,55,7,141144,729,257,53,142183],
+['2026-01','FULL','aceito','3. ML','Outros',1742,17,9,3,1765,4,2,0,1744,17,8,2,1771],
+['2026-01','FULL','aceito','4. Sem App Ativo','EA-MP',13911,88,22,2,13975,44,4,0,13952,54,15,2,14023],
+['2026-01','FULL','aceito','4. Sem App Ativo','Outros',100,2,1,0,102,1,0,0,101,1,1,0,103],
+['2026-01','FULL','nao_aceito','1. MP','EA-MP',4876,21,3,0,4877,21,2,0,4897,3,0,0,4900],
+['2026-01','FULL','nao_aceito','1. MP','Outros',277446,1335,490,233,277507,1343,471,183,279254,185,59,6,279504],
+['2026-01','FULL','nao_aceito','2. MP y ML','EA-MP',48328,324,49,9,48400,284,21,5,48498,208,4,0,48710],
+['2026-01','FULL','nao_aceito','2. MP y ML','Outros',1943507,9458,3750,2303,1946316,8881,2699,1122,1949697,7644,1380,297,1959018],
+['2026-01','FULL','nao_aceito','3. ML','EA-MP',65930,193,37,5,66073,84,7,1,65976,166,19,4,66165],
+['2026-01','FULL','nao_aceito','3. ML','Outros',6563087,22054,20287,9466,6610317,2819,1239,519,6565058,21852,19569,8415,6614894],
+['2026-01','FULL','nao_aceito','4. Sem App Ativo','EA-MP',4152,7,2,0,4155,4,2,0,4158,3,0,0,4161],
+['2026-01','FULL','nao_aceito','4. Sem App Ativo','Outros',1068041,2366,1511,505,1071853,384,143,43,1068469,2138,1399,417,1072423],
+['2026-01','MICRO','aceito','1. MP','EA-MP',15681,3,1,0,15681,3,1,0,15685,0,0,0,15685],
+['2026-01','MICRO','aceito','1. MP','Outros',13,0,0,0,13,0,0,0,13,0,0,0,13],
+['2026-01','MICRO','aceito','2. MP y ML','EA-MP',91797,22,0,0,91797,22,0,0,91819,0,0,0,91819],
+['2026-01','MICRO','aceito','2. MP y ML','Outros',211,0,0,0,211,0,0,0,211,0,0,0,211],
+['2026-01','MICRO','aceito','3. ML','EA-MP',36428,0,0,0,36428,0,0,0,36428,0,0,0,36428],
+['2026-01','MICRO','aceito','3. ML','Outros',171,0,0,0,171,0,0,0,171,0,0,0,171],
+['2026-01','MICRO','aceito','4. Sem App Ativo','EA-MP',4537,0,0,0,4537,0,0,0,4537,0,0,0,4537],
+['2026-01','MICRO','aceito','4. Sem App Ativo','Outros',21,0,0,0,21,0,0,0,21,0,0,0,21],
+['2026-01','MICRO','nao_aceito','1. MP','EA-MP',1070,0,0,0,1070,0,0,0,1070,0,0,0,1070],
+['2026-01','MICRO','nao_aceito','1. MP','Outros',75698,13,0,0,75698,13,0,0,75711,0,0,0,75711],
+['2026-01','MICRO','nao_aceito','2. MP y ML','EA-MP',6814,2,1,0,6814,2,1,0,6817,0,0,0,6817],
+['2026-01','MICRO','nao_aceito','2. MP y ML','Outros',291043,33,0,0,291043,33,0,0,291076,0,0,0,291076],
+['2026-01','MICRO','nao_aceito','3. ML','EA-MP',8781,1,0,0,8781,1,0,0,8782,0,0,0,8782],
+['2026-01','MICRO','nao_aceito','3. ML','Outros',383176,5,1,0,383177,4,1,0,383180,2,0,0,383182],
+['2026-01','MICRO','nao_aceito','4. Sem App Ativo','EA-MP',933,1,0,0,933,1,0,0,934,0,0,0,934],
+['2026-01','MICRO','nao_aceito','4. Sem App Ativo','Outros',80222,1,2,0,80222,1,2,0,80225,0,0,0,80225],
+// Fev 2026
+['2026-02','FULL','aceito','1. MP','EA-MP',18694,994,40,11,19070,628,33,8,19527,212,0,0,19739],
+['2026-02','FULL','aceito','1. MP','Outros',28,4,0,0,30,2,0,0,32,0,0,0,32],
+['2026-02','FULL','aceito','2. MP y ML','EA-MP',197456,16095,498,124,207757,6177,183,56,206967,7128,72,6,214173],
+['2026-02','FULL','aceito','2. MP y ML','Outros',773,97,6,4,839,34,7,0,840,39,0,1,880],
+['2026-02','FULL','aceito','3. ML','EA-MP',112877,18207,159,53,129485,1768,34,9,127398,3794,93,11,131296],
+['2026-02','FULL','aceito','3. ML','Outros',753,103,2,3,851,8,2,0,828,31,0,2,861],
+['2026-02','FULL','aceito','4. Sem App Ativo','EA-MP',14077,1155,23,4,14978,272,7,2,14954,301,4,0,15259],
+['2026-02','FULL','aceito','4. Sem App Ativo','Outros',51,4,1,0,54,2,0,0,53,2,1,0,56],
+['2026-02','FULL','nao_aceito','1. MP','EA-MP',4343,2330,26,1,4719,1972,8,1,6379,321,0,0,6700],
+['2026-02','FULL','nao_aceito','1. MP','Outros',210668,96655,1639,303,226065,82053,919,228,297569,11603,82,11,309265],
+['2026-02','FULL','nao_aceito','2. MP y ML','EA-MP',30401,36398,1541,20,43861,24367,127,5,52321,16026,13,0,68360],
+['2026-02','FULL','nao_aceito','2. MP y ML','Outros',941230,1078784,51352,2782,1385790,682371,4776,1211,1586553,485539,1560,496,2074148],
+['2026-02','FULL','nao_aceito','3. ML','EA-MP',56122,39144,518,1,87981,7782,22,0,84364,11411,10,0,95785],
+['2026-02','FULL','nao_aceito','3. ML','Outros',4659531,2602826,24571,2149,6957610,330214,1050,203,6592810,691940,2850,1477,7289077],
+['2026-02','FULL','nao_aceito','4. Sem App Ativo','EA-MP',5724,1609,23,1,6765,590,1,1,6942,415,0,0,7357],
+['2026-02','FULL','nao_aceito','4. Sem App Ativo','Outros',1443818,143070,1243,45,1537876,50154,126,20,1558872,29240,51,13,1588176],
+['2026-02','MICRO','aceito','1. MP','EA-MP',9495,753,11,0,9712,540,7,0,10004,255,0,0,10259],
+['2026-02','MICRO','aceito','1. MP','Outros',6,0,0,0,6,0,0,0,6,0,0,0,6],
+['2026-02','MICRO','aceito','2. MP y ML','EA-MP',51633,6695,66,2,55806,2555,35,0,53572,4822,2,0,58396],
+['2026-02','MICRO','aceito','2. MP y ML','Outros',69,19,0,0,85,3,0,0,72,16,0,0,88],
+['2026-02','MICRO','aceito','3. ML','EA-MP',29338,9641,37,0,38245,769,2,0,31653,7363,0,0,39016],
+['2026-02','MICRO','aceito','3. ML','Outros',104,24,1,0,128,1,0,0,108,21,0,0,129],
+['2026-02','MICRO','aceito','4. Sem App Ativo','EA-MP',4064,628,8,1,4563,133,5,0,4256,444,1,0,4701],
+['2026-02','MICRO','aceito','4. Sem App Ativo','Outros',18,1,0,0,19,0,0,0,18,1,0,0,19],
+['2026-02','MICRO','nao_aceito','1. MP','EA-MP',724,553,4,0,851,429,1,0,1094,187,0,0,1281],
+['2026-02','MICRO','nao_aceito','1. MP','Outros',25381,13360,119,2,28470,10355,37,0,34674,4188,0,0,38862],
+['2026-02','MICRO','nao_aceito','2. MP y ML','EA-MP',1611,5029,132,0,4453,2314,5,0,2590,4182,0,0,6772],
+['2026-02','MICRO','nao_aceito','2. MP y ML','Outros',33837,81761,1290,21,85099,31658,149,3,47567,69341,1,0,116909],
+['2026-02','MICRO','nao_aceito','3. ML','EA-MP',4485,12045,56,1,15795,789,3,0,5903,10684,0,0,16587],
+['2026-02','MICRO','nao_aceito','3. ML','Outros',255636,504361,1098,9,745522,15522,60,0,312947,448157,0,0,761104],
+['2026-02','MICRO','nao_aceito','4. Sem App Ativo','EA-MP',835,593,7,0,1338,97,0,0,944,491,0,0,1435],
+['2026-02','MICRO','nao_aceito','4. Sem App Ativo','Outros',148067,24965,115,1,170646,2483,19,0,152390,20757,1,0,173148],
+// Mar 2026
+['2026-03','FULL','aceito','1. MP','EA-MP',14402,11588,2720,198,15280,11493,2078,57,25886,2842,180,0,28908],
+['2026-03','FULL','aceito','1. MP','Outros',19,17,8,1,23,18,3,1,32,12,1,0,45],
+['2026-03','FULL','aceito','2. MP y ML','EA-MP',95931,124941,49017,8634,132872,125147,20035,469,162986,100582,14894,61,278523],
+['2026-03','FULL','aceito','2. MP y ML','Outros',343,773,479,111,651,827,218,10,660,891,151,4,1706],
+['2026-03','FULL','aceito','3. ML','EA-MP',46136,105097,28478,2799,156192,21810,4438,70,51255,109869,21271,115,182510],
+['2026-03','FULL','aceito','3. ML','Outros',398,794,285,46,1292,171,58,2,430,865,224,4,1523],
+['2026-03','FULL','aceito','4. Sem App Ativo','EA-MP',13337,5656,1314,128,17593,2364,468,10,14860,4972,601,2,20435],
+['2026-03','FULL','aceito','4. Sem App Ativo','Outros',66,27,13,1,91,13,3,0,72,30,5,0,107],
+['2026-03','FULL','nao_aceito','1. MP','EA-MP',1371,2535,1868,374,1571,2705,1713,159,4781,1245,121,1,6148],
+['2026-03','FULL','nao_aceito','1. MP','Outros',76689,131252,99942,16511,86686,137714,92216,7778,267030,50448,6835,81,324394],
+['2026-03','FULL','nao_aceito','2. MP y ML','EA-MP',9477,16050,22911,10541,16974,23069,17809,1127,17566,31011,10329,73,58979],
+['2026-03','FULL','nao_aceito','2. MP y ML','Outros',260411,538541,841394,389968,611107,742361,639325,37521,493675,1096137,434778,5724,2030314],
+['2026-03','FULL','nao_aceito','3. ML','EA-MP',11681,25436,29998,3967,58779,7333,4726,244,13116,29789,27927,250,71082],
+['2026-03','FULL','nao_aceito','3. ML','Outros',1668105,2757274,2678379,218357,6653072,396291,259285,13467,1769565,2958903,2573540,20107,7322115],
+['2026-03','FULL','nao_aceito','4. Sem App Ativo','EA-MP',2902,1723,1051,184,4765,695,372,28,3388,1734,736,2,5860],
+['2026-03','FULL','nao_aceito','4. Sem App Ativo','Outros',1249131,237774,103966,11845,1487575,84645,28637,1859,1322915,201100,78414,287,1602716],
+['2026-03','MICRO','aceito','1. MP','EA-MP',11629,5053,1551,105,11868,5006,1406,58,17445,864,29,0,18338],
+['2026-03','MICRO','aceito','1. MP','Outros',2,6,1,1,2,6,2,0,7,3,0,0,10],
+['2026-03','MICRO','aceito','2. MP y ML','EA-MP',53215,28119,8901,1152,60386,25362,5577,62,70391,20010,986,0,91387],
+['2026-03','MICRO','aceito','2. MP y ML','Outros',33,56,30,3,52,54,16,0,63,58,1,0,122],
+['2026-03','MICRO','aceito','3. ML','EA-MP',11109,23415,3524,440,33304,4151,1024,9,12232,24414,1842,0,38488],
+['2026-03','MICRO','aceito','3. ML','Outros',43,87,14,0,133,7,4,0,44,94,6,0,144],
+['2026-03','MICRO','aceito','4. Sem App Ativo','EA-MP',2772,1201,236,19,3634,480,113,1,3115,1060,53,0,4228],
+['2026-03','MICRO','aceito','4. Sem App Ativo','Outros',13,3,1,0,15,2,0,0,14,3,0,0,17],
+['2026-03','MICRO','nao_aceito','1. MP','EA-MP',354,613,550,55,405,606,523,38,1333,232,7,0,1572],
+['2026-03','MICRO','nao_aceito','1. MP','Outros',18022,25029,23330,1974,19858,24920,22497,1080,59460,8469,426,0,68355],
+['2026-03','MICRO','nao_aceito','2. MP y ML','EA-MP',1132,3376,3574,1019,2432,3412,3155,102,3084,5461,556,0,9101],
+['2026-03','MICRO','nao_aceito','2. MP y ML','Outros',35947,91115,91189,24310,75558,89016,76082,1905,83939,142041,16581,0,242561],
+['2026-03','MICRO','nao_aceito','3. ML','EA-MP',2556,7902,2043,527,10866,1185,945,32,2836,9013,1179,0,13028],
+['2026-03','MICRO','nao_aceito','3. ML','Outros',152462,403477,73869,16065,585248,31239,28464,922,161104,432752,52017,0,645873],
+['2026-03','MICRO','nao_aceito','4. Sem App Ativo','EA-MP',584,320,110,29,855,113,70,5,664,335,44,0,1043],
+['2026-03','MICRO','nao_aceito','4. Sem App Ativo','Outros',51325,17247,5228,1384,67654,3942,3406,182,54889,17861,2434,0,75184],
+// Abr 2026
+['2026-04','FULL','aceito','1. MP','EA-MP',13439,8815,3229,319,14112,8860,2719,111,23482,2020,282,18,25802],
+['2026-04','FULL','aceito','1. MP','Outros',27,42,22,15,37,40,26,3,73,21,9,3,106],
+['2026-04','FULL','aceito','2. MP y ML','EA-MP',83535,91069,44401,9848,107720,91081,29060,992,146120,71064,11182,487,228853],
+['2026-04','FULL','aceito','2. MP y ML','Outros',291,633,519,208,585,741,306,19,671,701,226,53,1651],
+['2026-04','FULL','aceito','3. ML','EA-MP',42893,63626,23954,2064,115779,12899,3716,143,48792,64170,18843,732,132537],
+['2026-04','FULL','aceito','3. ML','Outros',334,485,250,28,949,103,44,1,384,498,203,12,1097],
+['2026-04','FULL','aceito','4. Sem App Ativo','EA-MP',10605,3841,1101,91,13786,1533,314,5,11661,3345,597,35,15638],
+['2026-04','FULL','aceito','4. Sem App Ativo','Outros',40,12,5,0,51,4,2,0,44,11,2,0,57],
+['2026-04','FULL','nao_aceito','1. MP','EA-MP',709,1142,900,201,820,1243,813,76,2369,444,139,0,2952],
+['2026-04','FULL','nao_aceito','1. MP','Outros',96923,124498,94783,20080,111174,133617,83701,7792,280347,38675,14949,2313,336284],
+['2026-04','FULL','nao_aceito','2. MP y ML','EA-MP',4997,10701,13821,7558,10831,14361,10938,947,11354,16988,8514,221,37077],
+['2026-04','FULL','nao_aceito','2. MP y ML','Outros',301476,566383,890106,456623,751054,748764,659109,55661,569748,1099409,492414,53017,2214588],
+['2026-04','FULL','nao_aceito','3. ML','EA-MP',8195,14027,15757,3179,35111,3676,2206,165,9104,15766,14763,1525,41158],
+['2026-04','FULL','nao_aceito','3. ML','Outros',2000548,2466673,2487599,376496,6814276,302711,199182,15147,2085271,2633662,2369582,242801,7331316],
+['2026-04','FULL','nao_aceito','4. Sem App Ativo','EA-MP',1551,724,498,117,2498,258,128,6,1712,713,413,52,2890],
+['2026-04','FULL','nao_aceito','4. Sem App Ativo','Outros',824126,153268,97541,14275,1031036,39510,17759,905,854188,146763,80470,7789,1089210],
+['2026-04','MICRO','aceito','1. MP','EA-MP',9339,4684,1002,7,9502,4642,887,1,14479,547,6,0,15032],
+['2026-04','MICRO','aceito','1. MP','Outros',15,16,5,0,17,14,5,0,32,4,0,0,36],
+['2026-04','MICRO','aceito','2. MP y ML','EA-MP',47945,29043,6937,308,52699,28117,3417,0,69275,14401,557,0,84233],
+['2026-04','MICRO','aceito','2. MP y ML','Outros',71,89,36,0,89,92,15,0,120,72,4,0,196],
+['2026-04','MICRO','aceito','3. ML','EA-MP',15319,13388,2088,54,26736,3734,379,0,17212,12668,969,0,30849],
+['2026-04','MICRO','aceito','3. ML','Outros',53,62,12,0,110,15,2,0,56,64,7,0,127],
+['2026-04','MICRO','aceito','4. Sem App Ativo','EA-MP',2875,1082,154,2,3576,488,49,0,3233,836,44,0,4113],
+['2026-04','MICRO','aceito','4. Sem App Ativo','Outros',6,4,2,0,10,1,1,0,7,4,1,0,12],
+['2026-04','MICRO','nao_aceito','1. MP','EA-MP',287,365,136,6,324,359,111,0,663,127,4,0,794],
+['2026-04','MICRO','nao_aceito','1. MP','Outros',26164,33308,8231,294,28617,32866,6499,15,59860,7706,431,0,67997],
+['2026-04','MICRO','nao_aceito','2. MP y ML','EA-MP',1375,2737,1659,256,2353,2885,787,2,2554,3008,465,0,6027],
+['2026-04','MICRO','nao_aceito','2. MP y ML','Outros',57599,137397,66703,8495,106587,134583,28990,34,107953,146259,15979,3,270194],
+['2026-04','MICRO','nao_aceito','3. ML','EA-MP',3399,3311,1139,119,6821,849,298,0,3646,3575,747,0,7968],
+['2026-04','MICRO','nao_aceito','3. ML','Outros',344694,288626,69451,4418,652087,41624,13463,15,357680,300333,49120,56,707189],
+['2026-04','MICRO','nao_aceito','4. Sem App Ativo','EA-MP',459,237,59,1,664,76,16,0,496,236,24,0,756],
+['2026-04','MICRO','nao_aceito','4. Sem App Ativo','Outros',121094,20249,5222,275,140057,5273,1508,2,124567,19283,2989,1,146840],
+// Mai 2026
+['2026-05','FULL','aceito','1. MP','EA-MP',9772,2251,349,10,10222,1940,215,5,11731,557,93,1,12382],
+['2026-05','FULL','aceito','1. MP','Outros',120,86,28,6,136,89,13,2,197,30,12,1,240],
+['2026-05','FULL','aceito','2. MP y ML','EA-MP',74678,45052,9965,332,96048,31973,1993,13,94473,29976,5442,136,130027],
+['2026-05','FULL','aceito','2. MP y ML','Outros',608,1461,1081,63,1633,1377,201,2,1149,1364,673,27,3213],
+['2026-05','FULL','aceito','3. ML','EA-MP',23132,28243,9556,238,42250,18807,110,2,27151,27365,6610,43,61169],
+['2026-05','FULL','aceito','3. ML','Outros',581,1105,1001,51,1520,1204,14,0,788,1143,790,17,2738],
+['2026-05','FULL','aceito','4. Sem App Ativo','EA-MP',4542,1217,245,3,5304,688,15,0,4802,1052,153,0,6007],
+['2026-05','FULL','aceito','4. Sem App Ativo','Outros',132,46,33,2,173,38,2,0,138,44,31,0,213],
+['2026-05','FULL','nao_aceito','1. MP','EA-MP',375,53,2,0,377,51,2,0,427,3,0,0,430],
+['2026-05','FULL','nao_aceito','1. MP','Outros',165978,64042,22296,1285,187033,57328,9020,220,220543,21356,11060,642,253601],
+['2026-05','FULL','nao_aceito','2. MP y ML','EA-MP',5140,1174,11,1,5403,917,6,0,5878,446,2,0,6326],
+['2026-05','FULL','nao_aceito','2. MP y ML','Outros',439404,822757,623616,44036,1104272,766654,58442,445,732554,701165,471524,24570,1929813],
+['2026-05','FULL','nao_aceito','3. ML','EA-MP',588,105,2,0,630,65,0,0,621,74,0,0,695],
+['2026-05','FULL','nao_aceito','3. ML','Outros',1825672,2830437,2656043,128012,4446862,2979158,14110,34,2412482,2788198,2211637,27847,7440164],
+['2026-05','FULL','nao_aceito','4. Sem App Ativo','EA-MP',48,4,0,0,48,4,0,0,51,1,0,0,52],
+['2026-05','FULL','nao_aceito','4. Sem App Ativo','Outros',1012318,129847,81720,2689,1125351,99652,1555,16,1048859,109354,67634,727,1226574],
+['2026-05','MICRO','aceito','1. MP','EA-MP',10143,1024,98,0,10208,980,77,0,11129,129,7,0,11265],
+['2026-05','MICRO','aceito','1. MP','Outros',73,96,17,0,74,98,14,0,179,7,0,0,186],
+['2026-05','MICRO','aceito','2. MP y ML','EA-MP',57233,9768,1171,2,59773,8122,279,0,62623,5151,400,0,68174],
+['2026-05','MICRO','aceito','2. MP y ML','Outros',285,466,128,0,383,457,39,0,587,269,23,0,879],
+['2026-05','MICRO','aceito','3. ML','EA-MP',11084,8289,1035,1,15113,5269,27,0,12498,7544,367,0,20409],
+['2026-05','MICRO','aceito','3. ML','Outros',144,334,131,0,321,286,2,0,212,346,51,0,609],
+['2026-05','MICRO','aceito','4. Sem App Ativo','EA-MP',1770,397,54,0,1967,250,4,0,1863,338,20,0,2221],
+['2026-05','MICRO','aceito','4. Sem App Ativo','Outros',40,19,3,0,51,11,0,0,45,14,3,0,62],
+['2026-05','MICRO','nao_aceito','1. MP','EA-MP',35,9,3,0,35,9,3,0,47,0,0,0,47],
+['2026-05','MICRO','nao_aceito','1. MP','Outros',35030,12997,1827,2,36911,12003,940,2,46797,2602,457,0,49856],
+['2026-05','MICRO','nao_aceito','2. MP y ML','EA-MP',141,31,5,0,149,25,3,0,157,20,0,0,177],
+['2026-05','MICRO','nao_aceito','2. MP y ML','Outros',119644,108587,33029,51,170092,89041,2176,2,162152,85783,13369,7,261311],
+['2026-05','MICRO','nao_aceito','3. ML','EA-MP',19,6,0,0,20,5,0,0,21,4,0,0,25],
+['2026-05','MICRO','nao_aceito','3. ML','Outros',210643,449976,143203,396,491021,312650,547,0,277854,470889,55474,1,804218],
+['2026-05','MICRO','nao_aceito','4. Sem App Ativo','EA-MP',2,0,0,0,2,0,0,0,2,0,0,0,2],
+['2026-05','MICRO','nao_aceito','4. Sem App Ativo','Outros',111344,23262,6018,14,126232,14289,117,0,116687,21033,2917,1,140638],
 ];
 
-const SAFRAS = ['2026-01','2026-02','2026-03','2026-04','2026-05'];
-const LABELS = ['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'];
-const KEYS   = ['sem','c13','c47','c8'];
-const LEGEND = ['Sem comunicação','1–3 comms','4–7 comms','8+ comms'];
-const CLRS   = ['#8898aa','#009ee3','#ff7733','#e00024'];
+// índices das métricas por modo
+const IDX = {
+  total: { sem:5,  c13:6,  c47:7,  c8:8  },
+  mp:    { sem:9,  c13:10, c47:11, c8:12 },
+  ml:    { sem:13, c13:14, c47:15, c8:16 },
+};
+const TOTAL_IDX = 17;
 
-// Sets de seleção — vazio = todos
+const SAFRAS  = ['2026-01','2026-02','2026-03','2026-04','2026-05'];
+const LABELS  = ['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'];
+const LEGEND  = ['Sem comunicação','1–3 comms','4–7 comms','8+ comms'];
+const CLRS    = ['#8898aa','#009ee3','#ff7733','#e00024'];
+
 let selTipo  = new Set();
 let selGrupo = new Set();
 let selApp   = new Set();
-let modoAbs  = true;
+let selEA    = new Set();
+let modoAnalise = 'total';
+let modoAbs     = true;
+
+const ANALISE_COLORS = { total: '#009ee3', mp: '#00a650', ml: '#6c47c9' };
+const ANALISE_LABELS = { total: 'Total', mp: 'MP', ml: 'ML' };
 
 function matches(set, val) { return set.size === 0 || set.has(val); }
 
 function getAgg() {
+  const idx = IDX[modoAnalise];
   const agg = {};
-  SAFRAS.forEach(s => agg[s] = {sem:0,c13:0,c47:0,c8:0,total:0});
+  SAFRAS.forEach(s => agg[s] = { sem:0, c13:0, c47:0, c8:0, total:0 });
   RAW.forEach(r => {
-    if (!matches(selTipo,  r.tipo))  return;
-    if (!matches(selGrupo, r.grupo)) return;
-    if (!matches(selApp,   r.app))   return;
-    agg[r.safra].sem   += r.sem;
-    agg[r.safra].c13   += r.c13;
-    agg[r.safra].c47   += r.c47;
-    agg[r.safra].c8    += r.c8;
-    agg[r.safra].total += r.total;
+    if (!matches(selTipo,  r[1])) return;
+    if (!matches(selGrupo, r[2])) return;
+    if (!matches(selApp,   r[3])) return;
+    if (!matches(selEA,    r[4])) return;
+    const s = r[0];
+    if (!agg[s]) return;
+    agg[s].sem   += r[idx.sem];
+    agg[s].c13   += r[idx.c13];
+    agg[s].c47   += r[idx.c47];
+    agg[s].c8    += r[idx.c8];
+    agg[s].total += r[TOTAL_IDX];
   });
   return agg;
 }
 
-function fmt(n) {
-  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
-  if (n >= 1e3) return (n/1e3).toFixed(0)+'K';
-  return String(n);
+function fmt(v) {
+  if (v >= 1e6) return (v/1e6).toFixed(1)+'M';
+  if (v >= 1e3) return (v/1e3).toFixed(0)+'K';
+  return String(v);
 }
-function pct(a,b) { return b ? (a/b*100).toFixed(1)+'%' : '—'; }
-function fmtBR(n) { return n.toLocaleString('pt-BR'); }
+function pct(a, b) { return b ? (a/b*100).toFixed(1)+'%' : '—'; }
+function fmtBR(n)  { return n.toLocaleString('pt-BR'); }
 
 Chart.register(ChartDataLabels);
 
-// rótulo de dado: mostra % do segmento dentro da barra, oculta se < 4%
-const datalabelsConfig = (getTotal) => ({
+const dlConfig = (getTotal) => ({
   display: ctx => {
-    const total = getTotal(ctx);
-    return total > 0 && (ctx.dataset.data[ctx.dataIndex] / total) >= 0.04;
+    const t = getTotal(ctx);
+    return t > 0 && (ctx.dataset.data[ctx.dataIndex] / t) >= 0.04;
   },
-  formatter: (value, ctx) => {
-    const total = getTotal(ctx);
-    if (!total) return '';
-    return (value / total * 100).toFixed(1) + '%';
+  formatter: (v, ctx) => {
+    const t = getTotal(ctx);
+    return t ? (v/t*100).toFixed(1)+'%' : '';
   },
-  color: '#fff',
-  font: { size: 11, weight: '600' },
-  anchor: 'center',
-  align: 'center',
-  clamp: true,
+  color: '#fff', font: { size: 11, weight: '600' },
+  anchor: 'center', align: 'center', clamp: true,
 });
 
+function absTotal(ctx) {
+  return ctx.chart.data.datasets.reduce((s, ds) => s + (ds.data[ctx.dataIndex]||0), 0);
+}
+
 function makeDS(agg, pctMode) {
-  return KEYS.map((k,i) => ({
+  const keys = ['sem','c13','c47','c8'];
+  return keys.map((k,i) => ({
     label: LEGEND[i],
     data: SAFRAS.map(s => {
       const v = agg[s][k];
@@ -342,22 +479,12 @@ function makeDS(agg, pctMode) {
   }));
 }
 
-// para o gráfico absoluto: total = soma dos 4 segmentos no índice
-function absTotal(ctx) {
-  return ctx.chart.data.datasets.reduce((s, ds) => s + (ds.data[ctx.dataIndex] || 0), 0);
-}
-// para o gráfico %: total é sempre 100
-function pctTotal() { return 100; }
-
 const cAbs = new Chart(document.getElementById('chartSafra'), {
   type: 'bar',
   data: { labels: LABELS, datasets: [] },
   options: {
     responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      datalabels: datalabelsConfig(absTotal)
-    },
+    plugins: { legend: { position: 'top' }, datalabels: dlConfig(absTotal) },
     scales: {
       x: { stacked: true },
       y: { stacked: true, ticks: { callback: v => fmt(v) } }
@@ -370,10 +497,7 @@ const cPct = new Chart(document.getElementById('chartPct'), {
   data: { labels: LABELS, datasets: [] },
   options: {
     responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      datalabels: datalabelsConfig(pctTotal)
-    },
+    plugins: { legend: { position: 'top' }, datalabels: dlConfig(() => 100) },
     scales: {
       x: { stacked: true },
       y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v+'%' } }
@@ -383,11 +507,12 @@ const cPct = new Chart(document.getElementById('chartPct'), {
 
 function updateAll() {
   const agg = getAgg();
+
+  // KPIs
   const tot = SAFRAS.reduce((s,m) => s+agg[m].total, 0);
   const sem = SAFRAS.reduce((s,m) => s+agg[m].sem,   0);
   const c47 = SAFRAS.reduce((s,m) => s+agg[m].c47,   0);
   const c8  = SAFRAS.reduce((s,m) => s+agg[m].c8,    0);
-
   document.getElementById('kpiTotal').textContent  = fmt(tot);
   document.getElementById('kpiSem').textContent    = fmt(sem);
   document.getElementById('kpiSemPct').textContent = pct(sem,tot)+' do total';
@@ -396,10 +521,21 @@ function updateAll() {
   document.getElementById('kpi8').textContent      = fmt(c8);
   document.getElementById('kpi8Pct').textContent   = pct(c8,tot)+' do total';
 
+  // badge análise
+  const ind = document.getElementById('analiseIndicator');
+  const color = ANALISE_COLORS[modoAnalise];
+  ind.textContent = ANALISE_LABELS[modoAnalise];
+  ind.style.background = color+'22';
+  ind.style.color = color;
+
+  // subtítulo tabela
+  document.getElementById('tabelaSub').textContent =
+    `Comunicações: ${ANALISE_LABELS[modoAnalise]} | janela: encendido → aceite/cancelamento (pending: >= encendido)`;
+
+  // Charts
   cAbs.data.datasets = makeDS(agg, !modoAbs);
   cAbs.options.scales.y.ticks.callback = modoAbs ? v => fmt(v) : v => v+'%';
   cAbs.update();
-
   cPct.data.datasets = makeDS(agg, true);
   cPct.update();
 
@@ -415,7 +551,7 @@ function updateAll() {
       <td>${fmtBR(d.c47)}</td><td>${fmtBR(d.c8)}</td>
       <td>${fmtBR(d.total)}</td>
       <td>${pct(d.sem,d.total)}</td>
-      <td style="color:${p8>0.1?'#e00024':'#333'}">${pct(d.c8,d.total)}</td>
+      <td style="color:${p8>.1?'#e00024':'#333'}">${pct(d.c8,d.total)}</td>
     </tr>`;
   }).join('');
   document.getElementById('tabelaFoot').innerHTML = `<tr>
@@ -427,27 +563,30 @@ function updateAll() {
   </tr>`;
 }
 
-function bindGroup(id, selSet, allVals) {
+// ── Toggle análise ──
+document.querySelectorAll('.analise-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.analise-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    modoAnalise = btn.dataset.mode;
+    updateAll();
+  });
+});
+
+// ── Filtros multi-select ──
+function bindGroup(id, selSet) {
   const grp = document.getElementById(id);
   const todosBtn = grp.querySelector('[data-val="todos"]');
-
   grp.querySelectorAll('.btn-filter:not([data-val="todos"])').forEach(btn => {
     btn.addEventListener('click', () => {
       const v = btn.dataset.val;
-      if (selSet.has(v)) {
-        selSet.delete(v);
-        btn.classList.remove('active');
-      } else {
-        selSet.add(v);
-        btn.classList.add('active');
-      }
-      // "Todos" fica ativo só quando nada está selecionado
+      if (selSet.has(v)) { selSet.delete(v); btn.classList.remove('active'); }
+      else               { selSet.add(v);    btn.classList.add('active');    }
       if (selSet.size === 0) todosBtn.classList.add('active');
-      else todosBtn.classList.remove('active');
+      else                   todosBtn.classList.remove('active');
       updateAll();
     });
   });
-
   todosBtn.addEventListener('click', () => {
     selSet.clear();
     grp.querySelectorAll('.btn-filter:not([data-val="todos"])').forEach(b => b.classList.remove('active'));
@@ -456,9 +595,10 @@ function bindGroup(id, selSet, allVals) {
   });
 }
 
-bindGroup('grpTipo',   selTipo,  ['FULL','MICRO']);
-bindGroup('grpStatus', selGrupo, ['aceito','nao_aceito']);
-bindGroup('grpApp',    selApp,   ['1. MP','2. MP y ML','3. ML','4. Sem App Ativo']);
+bindGroup('grpTipo',   selTipo);
+bindGroup('grpStatus', selGrupo);
+bindGroup('grpApp',    selApp);
+bindGroup('grpEA',     selEA);
 
 document.getElementById('btnPct').addEventListener('click', function() {
   modoAbs = !modoAbs;
