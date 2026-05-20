@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TC Aquisição — Distribuição por Safra 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f5f7; color: #333; }
+
+  .header {
+    background: linear-gradient(135deg, #009ee3 0%, #00c1df 100%);
+    color: white; padding: 22px 32px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .header h1 { font-size: 21px; font-weight: 700; margin-bottom: 4px; }
+  .header p  { font-size: 13px; opacity: 0.85; }
+  .header .meta { text-align: right; font-size: 12px; opacity: 0.85; line-height: 1.7; }
+
+  .container { max-width: 1300px; margin: 0 auto; padding: 24px 20px; }
+
+  .filters {
+    background: white; border-radius: 10px; padding: 16px 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-label { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
+  .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
+  .btn-filter {
+    padding: 5px 12px; border: 1.5px solid #dde; border-radius: 6px;
+    font-size: 12px; font-weight: 600; cursor: pointer; background: white;
+    color: #666; transition: all .15s; white-space: nowrap;
+  }
+  .btn-filter:hover  { border-color: #009ee3; color: #009ee3; }
+  .btn-filter.active { background: #009ee3; border-color: #009ee3; color: white; }
+  .btn-filter.todos  { background: #f4f5f7; color: #999; border-color: #dde; }
+  .btn-filter.todos.active { background: #009ee3; border-color: #009ee3; color: white; }
+
+  .sep { width: 1px; height: 32px; background: #eee; flex-shrink: 0; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card {
+    background: white; border-radius: 10px; padding: 14px 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08); border-left: 4px solid #009ee3;
+  }
+  .kpi-card.green  { border-left-color: #00a650; }
+  .kpi-card.orange { border-left-color: #ff7733; }
+  .kpi-card.red    { border-left-color: #e00024; }
+  .kpi-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+  .kpi-value { font-size: 22px; font-weight: 700; color: #222; }
+  .kpi-sub   { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+  .card {
+    background: white; border-radius: 10px; padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 18px;
+  }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .card h2 { font-size: 14px; font-weight: 600; color: #444; }
+  .card .sub { font-size: 11px; color: #aaa; margin-bottom: 16px; }
+
+  .toggle-pct {
+    padding: 4px 10px; border: 1.5px solid #dde; border-radius: 5px;
+    font-size: 11px; font-weight: 600; cursor: pointer; background: white; color: #666;
+    transition: all .15s; white-space: nowrap; flex-shrink: 0;
+  }
+  .toggle-pct.active { background: #6c47c9; border-color: #6c47c9; color: white; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { background: #f0f6fb; color: #555; font-weight: 600; padding: 8px 10px; text-align: right; border-bottom: 2px solid #dde8f0; }
+  thead th:first-child { text-align: left; }
+  tbody tr:hover { background: #f9fbfc; }
+  tbody td { padding: 7px 10px; border-bottom: 1px solid #eef1f4; text-align: right; }
+  tbody td:first-child { text-align: left; font-weight: 600; }
+  tfoot td { padding: 7px 10px; font-weight: 700; background: #f0f6fb; text-align: right; border-top: 2px solid #dde8f0; }
+  tfoot td:first-child { text-align: left; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>TC Aquisição — Distribuição de Comunicações por Safra</h1>
+    <p>Quantidade de comunicações recebidas por proposta, agrupada pelo mês de criação</p>
+  </div>
+  <div class="meta">
+    Período: 01/01/2026 – 18/05/2026 | Site: MLB<br>
+    Fonte: BT_CCARD_PROPOSAL × BT_OC_CUST_EVENT × SCORE_PROPOSTAS_CCARD
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Filtros -->
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">Tipo:</span>
+      <div class="btn-group" id="grpTipo">
+        <button class="btn-filter active" data-val="todos">Todos</button>
+        <button class="btn-filter" data-val="FULL">FULL</button>
+        <button class="btn-filter" data-val="MICRO">MICRO</button>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="filter-group">
+      <span class="filter-label">Status:</span>
+      <div class="btn-group" id="grpStatus">
+        <button class="btn-filter active" data-val="todos">Todos</button>
+        <button class="btn-filter" data-val="aceito">Aceito</button>
+        <button class="btn-filter" data-val="nao_aceito">Não Aceito</button>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="filter-group">
+      <span class="filter-label">App Ativo:</span>
+      <div class="btn-group" id="grpApp">
+        <button class="btn-filter active" data-val="todos">Todos</button>
+        <button class="btn-filter" data-val="1. MP">MP</button>
+        <button class="btn-filter" data-val="2. MP y ML">MP + ML</button>
+        <button class="btn-filter" data-val="3. ML">ML</button>
+        <button class="btn-filter" data-val="4. Sem App Ativo">Sem App</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total de Propostas</div>
+      <div class="kpi-value" id="kpiTotal">—</div>
+      <div class="kpi-sub">na seleção atual</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Sem Comunicação</div>
+      <div class="kpi-value" id="kpiSem">—</div>
+      <div class="kpi-sub" id="kpiSemPct">—</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">4–7 Comms</div>
+      <div class="kpi-value" id="kpi47">—</div>
+      <div class="kpi-sub" id="kpi47Pct">—</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">8+ Comms</div>
+      <div class="kpi-value" id="kpi8">—</div>
+      <div class="kpi-sub" id="kpi8Pct">—</div>
+    </div>
+  </div>
+
+  <!-- Gráfico absoluto/% -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>Distribuição de Comunicações por Safra</h2>
+        <div class="sub">Cada barra = total de propostas da safra, segmentado por faixa de comunicações recebidas</div>
+      </div>
+      <button class="toggle-pct" id="btnPct">Ver em %</button>
+    </div>
+    <canvas id="chartSafra" height="130"></canvas>
+  </div>
+
+  <!-- Gráfico % normalizado -->
+  <div class="card">
+    <h2>Distribuição % por Safra</h2>
+    <div class="sub">Proporção de cada faixa dentro do total da safra — compara meses com volumes diferentes</div>
+    <canvas id="chartPct" height="130"></canvas>
+  </div>
+
+  <!-- Tabela -->
+  <div class="card">
+    <h2>Tabela Detalhada por Safra</h2>
+    <div class="sub">Dados conforme filtros selecionados</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Safra</th>
+          <th>Sem Comunicação</th><th>1–3 Comms</th><th>4–7 Comms</th><th>8+ Comms</th>
+          <th>Total</th><th>% Sem Comm</th><th>% 8+</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaBody"></tbody>
+      <tfoot id="tabelaFoot"></tfoot>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// filtro: todos os LIKE — atualizado com campanhas flows_communication_*
+const RAW = [
+  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:5845,   c13:8137,   c47:4153,   c8:823,    total:18958   },
+  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:37438,  c13:73731,  c47:46114,  c8:23748,  total:181031  },
+  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:31241,  c13:65162,  c47:38389,  c8:9161,   total:143953  },
+  {safra:'2026-01',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:7880,   c13:4635,   c47:1307,   c8:304,    total:14126   },
+  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:32762,  c13:43891,  c47:57669,  c8:150082, total:284404  },
+  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:153035, c13:119033, c47:195319, c8:1540342,total:2007729 },
+  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1027926,c13:508178, c47:1011393,c8:4133563,total:6681060 },
+  {safra:'2026-01',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:726622, c13:84276,  c47:91557,  c8:174129, total:1076584 },
+  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:4750,   c13:6854,   c47:3715,   c8:379,    total:15698   },
+  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:15764,  c13:40248,  c47:26514,  c8:9504,   total:92030   },
+  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:5943,   c13:17911,  c47:10063,  c8:2682,   total:36599   },
+  {safra:'2026-01',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2025,   c13:1834,   c47:568,    c8:131,    total:4558    },
+  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:12509,  c13:21518,  c47:24620,  c8:18134,  total:76781   },
+  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:22857,  c13:35368,  c47:71355,  c8:168313, total:297893  },
+  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:56305,  c13:45495,  c47:146399, c8:143765, total:391964  },
+  {safra:'2026-01',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:53640,  c13:9200,   c47:10701,  c8:7618,   total:81159   },
+  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:10305,  c13:7687,   c47:1712,   c8:67,     total:19771   },
+  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:74062,  c13:99666,  c47:38703,  c8:2621,   total:215052  },
+  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:46041,  c13:63867,  c47:20584,  c8:1665,   total:132157  },
+  {safra:'2026-02',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:9125,   c13:4753,   c47:1353,   c8:84,     total:15315   },
+  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:53070,  c13:73441,  c47:83726,  c8:105728, total:315965  },
+  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:186068, c13:224531, c47:390154, c8:1341756,total:2142509 },
+  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1263142,c13:1061470,c47:1755872,c8:3304378,total:7384862 },
+  {safra:'2026-02',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:1121838,c13:150797, c47:141389, c8:181509, total:1595533 },
+  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:4877,   c13:4157,   c47:1192,   c8:39,     total:10265   },
+  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:18026,  c13:29342,  c47:10085,  c8:1031,   total:58484   },
+  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:9422,   c13:22317,  c47:7194,   c8:212,    total:39145   },
+  {safra:'2026-02',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2468,   c13:1905,   c47:338,    c8:9,      total:4720    },
+  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:9719,   c13:16820,  c47:10228,  c8:3376,   total:40143   },
+  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:15920,  c13:36065,  c47:43517,  c8:28179,  total:123681  },
+  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:146462, c13:185770, c47:322742, c8:122717, total:777691  },
+  {safra:'2026-02',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:125024, c13:20560,  c47:22379,  c8:6620,   total:174583  },
+  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:12031,  c13:12475,  c47:3891,   c8:555,    total:28952   },
+  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:72820,  c13:136980, c47:57700,  c8:12726,  total:280226  },
+  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:57068,  c13:99025,  c47:24150,  c8:3788,   total:184031  },
+  {safra:'2026-03',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:11298,  c13:7366,   c47:1669,   c8:209,    total:20542   },
+  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:55889,  c13:78596,  c47:98048,  c8:98010,  total:330543  },
+  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:186986, c13:256139, c47:470976, c8:1175195,total:2089296 },
+  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1333172,c13:1265237,c47:1972225,c8:2822565,total:7393199 },
+  {safra:'2026-03',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:1132073,c13:182785, c47:149808, c8:143910, total:1608576 },
+  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:9650,   c13:6410,   c47:2134,   c8:154,    total:18348   },
+  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:31519,  c13:45433,  c47:12846,  c8:1710,   total:91508   },
+  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:12235,  c13:21204,  c47:4727,   c8:466,    total:38632   },
+  {safra:'2026-03',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2288,   c13:1633,   c47:300,    c8:24,     total:4245    },
+  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:15205,  c13:23357,  c47:24679,  c8:6686,   total:69927   },
+  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:29394,  c13:69842,  c47:90850,  c8:61577,  total:251663  },
+  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:155173, c13:252907, c47:193473, c8:57348,  total:658901  },
+  {safra:'2026-03',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:46441,  c13:14468,  c47:11279,  c8:4039,   total:76227   },
+  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:11495,  c13:8613,   c47:4875,   c8:914,    total:25897   },
+  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:62883,  c13:84919,  c47:61014,  c8:21629,  total:230445  },
+  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:35727,  c13:58694,  c47:33021,  c8:6190,   total:133632  },
+  {safra:'2026-04',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:9209,   c13:4638,   c47:1596,   c8:251,    total:15694   },
+  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:89599,  c13:114202, c47:94186,  c8:41260,  total:339247  },
+  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:242334, c13:424720, c47:751610, c8:833060, total:2251724 },
+  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1473331,c13:1558217,c47:2426918,c8:1914010,total:7372476 },
+  {safra:'2026-04',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:775266, c13:127700, c47:126390, c8:62745,  total:1092101 },
+  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:8481,   c13:4816,   c47:1732,   c8:34,     total:15063   },
+  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:32469,  c13:39935,  c47:10985,  c8:1023,   total:84412   },
+  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:13424,  c13:14810,  c47:2619,   c8:121,    total:30974   },
+  {safra:'2026-04',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:2545,   c13:1364,   c47:208,    c8:8,      total:4125    },
+  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:25818,  c13:32471,  c47:9587,   c8:920,    total:68796   },
+  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:48661,  c13:127436, c47:79066,  c8:21075,  total:276238  },
+  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:193881, c13:319945, c47:180007, c8:21326,  total:715159  },
+  {safra:'2026-04',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:112855, c13:21583,  c47:11897,  c8:1261,   total:147596  },
+  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'1. MP',            sem:8788,   c13:2800,   c47:946,    c8:49,     total:12583   },
+  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'2. MP y ML',       sem:58157,  c13:52624,  c47:21132,  c8:946,    total:132859  },
+  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'3. ML',            sem:20075,  c13:29207,  c47:13956,  c8:335,    total:63573   },
+  {safra:'2026-05',tipo:'FULL', grupo:'aceito',     app:'4. Sem App Ativo', sem:4402,   c13:1398,   c47:388,    c8:5,      total:6193    },
+  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'1. MP',            sem:156254, c13:72966,  c47:23116,  c8:1734,   total:254070  },
+  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'2. MP y ML',       sem:432639, c13:829314, c47:625058, c8:49509,  total:1936520 },
+  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'3. ML',            sem:1833306,c13:2888357,c47:2610571,c8:108959, total:7441193 },
+  {safra:'2026-05',tipo:'FULL', grupo:'nao_aceito', app:'4. Sem App Ativo', sem:1013492,c13:132328, c47:78698,  c8:2135,   total:1226653 },
+  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'1. MP',            sem:10151,  c13:1016,   c47:258,    c8:1,      total:11426   },
+  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'2. MP y ML',       sem:56090,  c13:10631,  c47:2209,   c8:4,      total:68934   },
+  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'3. ML',            sem:10653,  c13:8945,   c47:1313,   c8:2,      total:20913   },
+  {safra:'2026-05',tipo:'MICRO',grupo:'aceito',     app:'4. Sem App Ativo', sem:1796,   c13:416,    c47:61,     c8:0,      total:2273    },
+  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'1. MP',            sem:35342,  c13:12780,  c47:1804,   c8:2,      total:49928   },
+  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'2. MP y ML',       sem:119892, c13:108588, c47:33075,  c8:52,     total:261607  },
+  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'3. ML',            sem:212942, c13:452745, c47:138303, c8:358,    total:804348  },
+  {safra:'2026-05',tipo:'MICRO',grupo:'nao_aceito', app:'4. Sem App Ativo', sem:111529, c13:23492,  c47:5615,   c8:14,     total:140650  },
+];
+
+const SAFRAS = ['2026-01','2026-02','2026-03','2026-04','2026-05'];
+const LABELS = ['Jan/26','Fev/26','Mar/26','Abr/26','Mai/26'];
+const KEYS   = ['sem','c13','c47','c8'];
+const LEGEND = ['Sem comunicação','1–3 comms','4–7 comms','8+ comms'];
+const CLRS   = ['#8898aa','#009ee3','#ff7733','#e00024'];
+
+// Sets de seleção — vazio = todos
+let selTipo  = new Set();
+let selGrupo = new Set();
+let selApp   = new Set();
+let modoAbs  = true;
+
+function matches(set, val) { return set.size === 0 || set.has(val); }
+
+function getAgg() {
+  const agg = {};
+  SAFRAS.forEach(s => agg[s] = {sem:0,c13:0,c47:0,c8:0,total:0});
+  RAW.forEach(r => {
+    if (!matches(selTipo,  r.tipo))  return;
+    if (!matches(selGrupo, r.grupo)) return;
+    if (!matches(selApp,   r.app))   return;
+    agg[r.safra].sem   += r.sem;
+    agg[r.safra].c13   += r.c13;
+    agg[r.safra].c47   += r.c47;
+    agg[r.safra].c8    += r.c8;
+    agg[r.safra].total += r.total;
+  });
+  return agg;
+}
+
+function fmt(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(0)+'K';
+  return String(n);
+}
+function pct(a,b) { return b ? (a/b*100).toFixed(1)+'%' : '—'; }
+function fmtBR(n) { return n.toLocaleString('pt-BR'); }
+
+Chart.register(ChartDataLabels);
+
+// rótulo de dado: mostra % do segmento dentro da barra, oculta se < 4%
+const datalabelsConfig = (getTotal) => ({
+  display: ctx => {
+    const total = getTotal(ctx);
+    return total > 0 && (ctx.dataset.data[ctx.dataIndex] / total) >= 0.04;
+  },
+  formatter: (value, ctx) => {
+    const total = getTotal(ctx);
+    if (!total) return '';
+    return (value / total * 100).toFixed(1) + '%';
+  },
+  color: '#fff',
+  font: { size: 11, weight: '600' },
+  anchor: 'center',
+  align: 'center',
+  clamp: true,
+});
+
+function makeDS(agg, pctMode) {
+  return KEYS.map((k,i) => ({
+    label: LEGEND[i],
+    data: SAFRAS.map(s => {
+      const v = agg[s][k];
+      return pctMode ? (agg[s].total ? +(v/agg[s].total*100).toFixed(2) : 0) : v;
+    }),
+    backgroundColor: CLRS[i],
+    stack: 'main'
+  }));
+}
+
+// para o gráfico absoluto: total = soma dos 4 segmentos no índice
+function absTotal(ctx) {
+  return ctx.chart.data.datasets.reduce((s, ds) => s + (ds.data[ctx.dataIndex] || 0), 0);
+}
+// para o gráfico %: total é sempre 100
+function pctTotal() { return 100; }
+
+const cAbs = new Chart(document.getElementById('chartSafra'), {
+  type: 'bar',
+  data: { labels: LABELS, datasets: [] },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      datalabels: datalabelsConfig(absTotal)
+    },
+    scales: {
+      x: { stacked: true },
+      y: { stacked: true, ticks: { callback: v => fmt(v) } }
+    }
+  }
+});
+
+const cPct = new Chart(document.getElementById('chartPct'), {
+  type: 'bar',
+  data: { labels: LABELS, datasets: [] },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      datalabels: datalabelsConfig(pctTotal)
+    },
+    scales: {
+      x: { stacked: true },
+      y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v+'%' } }
+    }
+  }
+});
+
+function updateAll() {
+  const agg = getAgg();
+  const tot = SAFRAS.reduce((s,m) => s+agg[m].total, 0);
+  const sem = SAFRAS.reduce((s,m) => s+agg[m].sem,   0);
+  const c47 = SAFRAS.reduce((s,m) => s+agg[m].c47,   0);
+  const c8  = SAFRAS.reduce((s,m) => s+agg[m].c8,    0);
+
+  document.getElementById('kpiTotal').textContent  = fmt(tot);
+  document.getElementById('kpiSem').textContent    = fmt(sem);
+  document.getElementById('kpiSemPct').textContent = pct(sem,tot)+' do total';
+  document.getElementById('kpi47').textContent     = fmt(c47);
+  document.getElementById('kpi47Pct').textContent  = pct(c47,tot)+' do total';
+  document.getElementById('kpi8').textContent      = fmt(c8);
+  document.getElementById('kpi8Pct').textContent   = pct(c8,tot)+' do total';
+
+  cAbs.data.datasets = makeDS(agg, !modoAbs);
+  cAbs.options.scales.y.ticks.callback = modoAbs ? v => fmt(v) : v => v+'%';
+  cAbs.update();
+
+  cPct.data.datasets = makeDS(agg, true);
+  cPct.update();
+
+  // Tabela
+  let tS=0,tC13=0,tC47=0,tC8=0,tAll=0;
+  document.getElementById('tabelaBody').innerHTML = SAFRAS.map((s,i) => {
+    const d = agg[s];
+    tS+=d.sem; tC13+=d.c13; tC47+=d.c47; tC8+=d.c8; tAll+=d.total;
+    const p8 = d.total ? d.c8/d.total : 0;
+    return `<tr>
+      <td>${LABELS[i]}</td>
+      <td>${fmtBR(d.sem)}</td><td>${fmtBR(d.c13)}</td>
+      <td>${fmtBR(d.c47)}</td><td>${fmtBR(d.c8)}</td>
+      <td>${fmtBR(d.total)}</td>
+      <td>${pct(d.sem,d.total)}</td>
+      <td style="color:${p8>0.1?'#e00024':'#333'}">${pct(d.c8,d.total)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tabelaFoot').innerHTML = `<tr>
+    <td>Total</td>
+    <td>${fmtBR(tS)}</td><td>${fmtBR(tC13)}</td>
+    <td>${fmtBR(tC47)}</td><td>${fmtBR(tC8)}</td>
+    <td>${fmtBR(tAll)}</td>
+    <td>${pct(tS,tAll)}</td><td>${pct(tC8,tAll)}</td>
+  </tr>`;
+}
+
+function bindGroup(id, selSet, allVals) {
+  const grp = document.getElementById(id);
+  const todosBtn = grp.querySelector('[data-val="todos"]');
+
+  grp.querySelectorAll('.btn-filter:not([data-val="todos"])').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.val;
+      if (selSet.has(v)) {
+        selSet.delete(v);
+        btn.classList.remove('active');
+      } else {
+        selSet.add(v);
+        btn.classList.add('active');
+      }
+      // "Todos" fica ativo só quando nada está selecionado
+      if (selSet.size === 0) todosBtn.classList.add('active');
+      else todosBtn.classList.remove('active');
+      updateAll();
+    });
+  });
+
+  todosBtn.addEventListener('click', () => {
+    selSet.clear();
+    grp.querySelectorAll('.btn-filter:not([data-val="todos"])').forEach(b => b.classList.remove('active'));
+    todosBtn.classList.add('active');
+    updateAll();
+  });
+}
+
+bindGroup('grpTipo',   selTipo,  ['FULL','MICRO']);
+bindGroup('grpStatus', selGrupo, ['aceito','nao_aceito']);
+bindGroup('grpApp',    selApp,   ['1. MP','2. MP y ML','3. ML','4. Sem App Ativo']);
+
+document.getElementById('btnPct').addEventListener('click', function() {
+  modoAbs = !modoAbs;
+  this.classList.toggle('active', !modoAbs);
+  this.textContent = modoAbs ? 'Ver em %' : 'Ver absoluto';
+  updateAll();
+});
+
+updateAll();
+</script>
+</body>
+</html>
