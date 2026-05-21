@@ -1,0 +1,40 @@
+name: Atualizar Dashboard TC Aquisição
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # todo dia às 09:00 BRT (12:00 UTC)
+  workflow_dispatch:         # permite rodar manualmente pelo botão no GitHub
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Autenticar no GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Instalar gcloud / bq CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Rodar query e atualizar dashboard
+        run: python scripts/update_tc_dash.py
+
+      - name: Commit e push se houve mudança
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dash_tc_comunicacoes.html
+          git diff --staged --quiet && echo "Sem mudanças" || \
+            (git commit -m "Auto-update TC dashboard $(date +%Y-%m-%d)" && git push)
