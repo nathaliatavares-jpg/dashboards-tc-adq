@@ -21,9 +21,9 @@ h2{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;l
 .up{color:var(--green);} .down{color:var(--red);}
 .chart-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
 canvas{max-height:260px;}
-.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-.pill{padding:3px 10px;border-radius:20px;font-size:10px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.12s;white-space:nowrap;}
-.pill.active{font-weight:700;}
+.dd-row{display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);}
+.dd-row:hover{background:rgba(255,255,255,.03);}
+.dd-row.active{background:rgba(255,255,255,.05);}
 .new-list{list-style:none;}
 .new-list li{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;gap:8px;}
 .new-list li:last-child{border-bottom:none;}
@@ -77,8 +77,27 @@ canvas{max-height:260px;}
   <canvas id="chartTotal" style="max-height:200px;"></canvas>
 </div>
 <div class="card" style="margin-bottom:14px;">
-  <div class="chart-title">Evolucao diaria por placement - clique para ativar/desativar</div>
-  <div class="pill-row" id="pillRow"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div class="chart-title" style="margin-bottom:0;">Evolucao diaria por placement</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <span id="lineActiveCount" style="font-size:10px;color:var(--muted);"></span>
+      <button onclick="selectTopN(5)" style="font-size:9px;padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">Top 5</button>
+      <button onclick="clearAllLines()" style="font-size:9px;padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">Limpar</button>
+    </div>
+  </div>
+  <div style="position:relative;margin-bottom:10px;" id="ddWrap">
+    <div id="ddToggle" onclick="toggleDd()" style="cursor:pointer;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;user-select:none;">
+      <span id="ddLabel" style="font-size:11px;color:var(--text);"></span>
+      <span id="ddArrow" style="color:var(--muted);font-size:9px;transition:.15s;">▼</span>
+    </div>
+    <div id="ddMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;z-index:100;overflow:hidden;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+      <div style="padding:7px 10px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+        <input id="ddSearch" type="text" placeholder="Buscar placement..." oninput="filterDd()" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:11px;">
+        <span style="font-size:9px;color:var(--muted);" id="ddCount"></span>
+      </div>
+      <div id="ddList" style="overflow-y:auto;max-height:300px;"></div>
+    </div>
+  </div>
   <canvas id="chartLines" style="max-height:280px;"></canvas>
 </div>
 <h2>Novos placements - ultimos 14 dias</h2>
@@ -154,12 +173,120 @@ function fmt(n){if(!n&&n!==0)return'--';return Number(n).toLocaleString('pt-BR')
   ab.innerHTML=html;
 })();
 new Chart(document.getElementById('chartTotal'),{type:'bar',data:{labels:LABELS.slice(0,-1),datasets:[{data:TOTAL.slice(0,-1),backgroundColor:WEEKENDS.slice(0,-1).map(function(w){return w?'rgba(192,132,252,.45)':'rgba(0,198,255,.5)';}),borderColor:WEEKENDS.slice(0,-1).map(function(w){return w?'#c084fc':'#00c6ff';}),borderWidth:1,borderRadius:2}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{title:function(t){return DATAS[t[0].dataIndex].split('-').reverse().join('/');},label:function(c){return ' '+fmt(c.raw)+' usuarios'+(WEEKENDS[c.dataIndex]?' (fim de semana)':'');}}}},scales:{x:{ticks:{color:'#6b7280',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:20},grid:{color:'rgba(255,255,255,.03)'}},y:{ticks:{color:'#6b7280',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k':v;}},grid:{color:'rgba(255,255,255,.05)'}}}}});
-var activeLines=new Set(['HOME_MINICARD_MP_RESTYLING','EA','CHO - CHECKOUT ML','One Page','Bottom Sheet']);
+// Ordena placements do mais relevante (maior volume total) ao menos relevante
+var PL_TOTALS={};
+PL_KEYS.forEach(function(k){PL_TOTALS[k]=PL[k].reduce(function(a,b){return a+b;},0);});
+var PL_SORTED=PL_KEYS.slice().sort(function(a,b){return PL_TOTALS[b]-PL_TOTALS[a];});
+var PL_MAX_TOTAL=PL_TOTALS[PL_SORTED[0]]||1;
+
+// Inicia com top 5 por volume
+var activeLines=new Set(PL_SORTED.slice(0,5));
+var ddOpen=false;
 var lineChart;
-function buildLineDs(){return PL_KEYS.map(function(k,i){return{label:k,data:PL[k].slice(0,-1),borderColor:COLORS[i],backgroundColor:COLORS[i]+'15',borderWidth:activeLines.has(k)?2:0,pointRadius:0,pointHoverRadius:activeLines.has(k)?4:0,tension:.3,hidden:!activeLines.has(k),fill:false};});}
-function renderLine(){if(lineChart)lineChart.destroy();lineChart=new Chart(document.getElementById('chartLines'),{type:'line',data:{labels:LABELS.slice(0,-1),datasets:buildLineDs()},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{filter:function(i){return !i.dataset.hidden;},callbacks:{title:function(t){return DATAS[t[0].dataIndex].split('-').reverse().join('/');},label:function(c){return c.dataset.hidden?null:' '+c.dataset.label+': '+fmt(c.raw);}}}},scales:{x:{ticks:{color:'#6b7280',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:20},grid:{color:'rgba(255,255,255,.03)'}},y:{ticks:{color:'#6b7280',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k':v;}},grid:{color:'rgba(255,255,255,.05)'}}}}});}
-function buildPills(){var pr=document.getElementById('pillRow');pr.innerHTML='';PL_KEYS.forEach(function(k,i){var p=document.createElement('div');p.className='pill'+(activeLines.has(k)?' active':'');if(activeLines.has(k)){p.style.borderColor=COLORS[i];p.style.color=COLORS[i];p.style.background=COLORS[i]+'1a';}p.textContent=k.replace('HOME_MINICARD_MP_','MCR_').replace('CARDS_LISTING_RESTYLING_','CLR_');p.onclick=function(){if(activeLines.has(k)){activeLines.delete(k);}else{activeLines.add(k);}buildPills();renderLine();};pr.appendChild(p);});}
-buildPills();renderLine();
+
+function getVisibleMax(){
+  var mx=1;
+  activeLines.forEach(function(k){
+    if(PL[k]){var m=Math.max.apply(null,PL[k].slice(0,-1));if(m>mx)mx=m;}
+  });
+  return mx;
+}
+
+function buildLineDs(){
+  return PL_SORTED.map(function(k,i){
+    return{label:k,data:PL[k].slice(0,-1),borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length]+'15',
+      borderWidth:activeLines.has(k)?2:0,pointRadius:0,pointHoverRadius:activeLines.has(k)?4:0,tension:.3,hidden:!activeLines.has(k),fill:false};
+  });
+}
+
+function renderLine(){
+  var vmax=getVisibleMax();
+  var ymax=Math.ceil(vmax*1.12/1000)*1000||1000;
+  if(lineChart)lineChart.destroy();
+  lineChart=new Chart(document.getElementById('chartLines'),{
+    type:'line',
+    data:{labels:LABELS.slice(0,-1),datasets:buildLineDs()},
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{filter:function(i){return !i.dataset.hidden;},
+        callbacks:{title:function(t){return DATAS[t[0].dataIndex].split('-').reverse().join('/');},
+          label:function(c){return c.dataset.hidden?null:' '+c.dataset.label+': '+fmt(c.raw);}}}},
+      scales:{
+        x:{ticks:{color:'#6b7280',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:20},grid:{color:'rgba(255,255,255,.03)'}},
+        y:{max:ymax,ticks:{color:'#6b7280',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'k':v;}},grid:{color:'rgba(255,255,255,.05)'}}
+      }
+    }
+  });
+}
+
+function updateDdLabel(){
+  var n=activeLines.size;
+  document.getElementById('ddLabel').textContent=n===0?'Nenhum placement selecionado':n+' placement'+(n>1?'s':'')+' ativo'+(n>1?'s':'');
+  document.getElementById('lineActiveCount').textContent=n+' ativo'+(n>1?'s':'');
+}
+
+function toggleDd(){
+  ddOpen=!ddOpen;
+  var menu=document.getElementById('ddMenu');
+  menu.style.display=ddOpen?'flex':'none';
+  document.getElementById('ddArrow').style.transform=ddOpen?'rotate(180deg)':'';
+  if(ddOpen){buildDdList();document.getElementById('ddSearch').focus();}
+}
+
+function filterDd(){
+  var q=document.getElementById('ddSearch').value.toLowerCase();
+  var rows=document.getElementById('ddList').querySelectorAll('.dd-row');
+  var vis=0;
+  rows.forEach(function(el){var show=el.dataset.pl.toLowerCase().indexOf(q)>=0;el.style.display=show?'':'none';if(show)vis++;});
+  document.getElementById('ddCount').textContent=vis+' placements';
+}
+
+function buildDdList(){
+  var list=document.getElementById('ddList');
+  list.innerHTML='';
+  document.getElementById('ddCount').textContent=PL_SORTED.length+' placements';
+  PL_SORTED.forEach(function(k,i){
+    var active=activeLines.has(k);
+    var color=COLORS[i%COLORS.length];
+    var pct=Math.round(PL_TOTALS[k]/PL_MAX_TOTAL*100);
+    var row=document.createElement('div');
+    row.className='dd-row'+(active?' active':'');
+    row.dataset.pl=k;
+    row.innerHTML=
+      '<div style="width:11px;height:11px;border-radius:3px;border:2px solid '+color+';background:'+(active?color:'transparent')+';flex-shrink:0;"></div>'+
+      '<span style="flex:1;font-size:10px;color:'+(active?'var(--text)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+k+'">'+k+'</span>'+
+      '<div style="flex:0 0 70px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">'+
+        '<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:2px;"></div>'+
+      '</div>'+
+      '<span style="font-size:9px;color:var(--muted);min-width:44px;text-align:right;">'+fmt(PL_TOTALS[k])+'</span>';
+    row.onclick=function(){
+      if(activeLines.has(k)){activeLines.delete(k);}else{activeLines.add(k);}
+      buildDdList();renderLine();updateDdLabel();
+    };
+    list.appendChild(row);
+  });
+}
+
+function selectTopN(n){
+  activeLines=new Set(PL_SORTED.slice(0,n));
+  if(ddOpen)buildDdList();
+  renderLine();updateDdLabel();
+}
+
+function clearAllLines(){
+  activeLines.clear();
+  if(ddOpen)buildDdList();
+  renderLine();updateDdLabel();
+}
+
+document.addEventListener('click',function(e){
+  if(ddOpen&&!document.getElementById('ddWrap').contains(e.target)){
+    ddOpen=false;
+    document.getElementById('ddMenu').style.display='none';
+    document.getElementById('ddArrow').style.transform='';
+  }
+});
+
+renderLine();updateDdLabel();
 var nl=document.getElementById('newList');
 NOVOS.forEach(function(n){var li=document.createElement('li');var badge=document.createElement('span');badge.className='badge';badge.textContent='NOVO';var name=document.createElement('span');name.className='pl-name';name.textContent=n.pl;var date=document.createElement('span');date.className='pl-date';date.textContent='desde '+n.from;var tot=document.createElement('span');tot.className='pl-total';tot.textContent='+'+fmt(n.total);li.appendChild(badge);li.appendChild(name);li.appendChild(date);li.appendChild(tot);nl.appendChild(li);});
 new Chart(document.getElementById('chartAcel'),{type:'bar',data:{labels:ACEL.map(function(a){return a.pl;}),datasets:[{data:ACEL.map(function(a){return a.delta===999?0:a.delta;}),backgroundColor:ACEL.map(function(a){return a.delta>0?'rgba(0,230,118,.7)':'rgba(255,77,109,.65)';}),borderColor:ACEL.map(function(a){return a.delta>0?'#00e676':'#ff4d6d';}),borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+(c.raw>0?'+':'')+c.raw+'%  ('+fmt(ACEL[c.dataIndex].atual)+' vs '+fmt(ACEL[c.dataIndex].prev)+')';}}}},scales:{x:{ticks:{color:'#6b7280',callback:function(v){return v+'%';}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#e8eaf0',font:{size:10}},grid:{display:false}}}}});
