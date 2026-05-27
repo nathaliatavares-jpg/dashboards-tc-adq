@@ -28,13 +28,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Rodar query e atualizar dashboard
+      - name: Rodar query e atualizar dashboard comunicacoes
         run: python scripts/update_tc_dash.py
+
+      - name: Rodar query e atualizar dashboard diario
+        run: python scripts/update_daily_dash.py
 
       - name: Commit e push se houve mudança
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add dash_tc_comunicacoes.html
+          git add dash_tc_comunicacoes.html daily.html
           git diff --staged --quiet && echo "Sem mudanças" || \
             (git commit -m "Auto-update TC dashboard $(date +%Y-%m-%d)" && git push)
