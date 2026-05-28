@@ -87,9 +87,16 @@ try {
     [System.IO.File]::WriteAllText($HTML, $html, [System.Text.Encoding]::UTF8)
     Write-Host "$(Get-Date -Format 'HH:mm:ss') HTML atualizado. Safras: $($safras -join ', ')"
 
-    # ── 5. Git commit e push ──
+    # ── 5. Atualiza daily.html via Python ──
+    Write-Host "$(Get-Date -Format 'HH:mm:ss') Atualizando daily.html..."
+    python "$REPO\scripts\update_daily_dash.py"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "update_daily_dash.py retornou erro $LASTEXITCODE — continuando mesmo assim."
+    }
+
+    # ── 6. Git commit e push ──
     Set-Location $REPO
-    git add dash_tc_comunicacoes.html
+    git add dash_tc_comunicacoes.html daily.html
 
     $diff = git diff --staged --quiet; $changed = $LASTEXITCODE -ne 0
     if ($changed) {
