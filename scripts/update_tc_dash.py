@@ -6,7 +6,10 @@ import subprocess
 import csv
 import io
 import re
+import sys
 from datetime import datetime
+
+BQ_CMD = "bq.cmd" if sys.platform == "win32" else "bq"
 
 BQ_PROJECT = "ddme000725-g9rtvpqr28z-furyid"
 
@@ -16,63 +19,63 @@ WITH proposals AS (
     prop.CUS_CUST_ID,
     CAST(prop.CCARD_PROP_CREATION_DT AS DATE)  AS data_encendido,
     CAST(prop.CCARD_PROP_UPDATE_DT AS DATE)    AS data_update,
-    FORMAT_DATE("%Y-%m", CAST(prop.CCARD_PROP_CREATION_DT AS DATE)) AS safra,
+    FORMAT_DATE('%Y-%m', CAST(prop.CCARD_PROP_CREATION_DT AS DATE)) AS safra,
     prop.CCARD_PROP_ID,
     prop.CCARD_PROP_STATUS,
-    CASE WHEN prop.CCARD_GLOBAL_LIMIT_AMT_LC > 300 THEN "FULL" ELSE "MICRO" END      AS flag_tc,
-    CASE WHEN prop.CCARD_PROP_STATUS = "accepted" THEN "aceito" ELSE "nao_aceito" END AS grupo,
-    COALESCE(tt.FLAG_APP_ATIVO, "Sem Info")                                           AS flag_app_ativo,
-    CASE WHEN congrats.CUS_CUST_ID IS NOT NULL THEN "EA" ELSE NULL END                AS ea_mp
+    CASE WHEN prop.CCARD_GLOBAL_LIMIT_AMT_LC > 300 THEN 'FULL' ELSE 'MICRO' END      AS flag_tc,
+    CASE WHEN prop.CCARD_PROP_STATUS = 'accepted' THEN 'aceito' ELSE 'nao_aceito' END AS grupo,
+    COALESCE(tt.FLAG_APP_ATIVO, 'Sem Info')                                           AS flag_app_ativo,
+    CASE WHEN congrats.CUS_CUST_ID IS NOT NULL THEN 'EA' ELSE NULL END                AS ea_mp
   FROM `meli-bi-data.WHOWNER.BT_CCARD_PROPOSAL` prop
   LEFT JOIN `meli-bi-data.SBOX_CREDITSTC.SCORE_PROPOSTAS_CCARD` tt
     ON prop.CCARD_PROP_ID = tt.CCARD_PROP_ID
   LEFT JOIN (
     SELECT DISTINCT CUS_CUST_ID, DATE_TRUNC(DT_aceite, MONTH) AS mes_aceite
     FROM `meli-bi-data.SBOX_CREDITSTC.0_AUT_TBL_CONGRATS_ADQ_MLB_TOTAL_AJUSTADA`
-    WHERE placement = "EA"
+    WHERE placement = 'EA'
   ) congrats
     ON prop.CUS_CUST_ID = congrats.CUS_CUST_ID
     AND DATE_TRUNC(CAST(prop.CCARD_PROP_UPDATE_DT AS DATE), MONTH) = congrats.mes_aceite
-  WHERE prop.SIT_SITE_ID = "MLB"
-    AND CAST(prop.CCARD_PROP_CREATION_DT AS DATE) >= "2026-01-01"
+  WHERE prop.SIT_SITE_ID = 'MLB'
+    AND CAST(prop.CCARD_PROP_CREATION_DT AS DATE) >= '2026-01-01'
 ),
 communications AS (
   SELECT NT.CUS_CUST_ID, NT.SENT_DATE, NT.CAMPAIGN_NAME, NT.APP
   FROM `meli-bi-data.SBOX_MARKETING.BT_OC_CUST_EVENT` NT
-  WHERE NT.SIT_SITE_ID = "MLB"
-    AND NT.FLAG_NOTIFICATION_CENTER = "N"
-    AND NT.EVENT_TYPE IN ("shown","open","arrived")
-    AND CAST(NT.SENT_DATE AS DATE) >= "2026-01-01"
+  WHERE NT.SIT_SITE_ID = 'MLB'
+    AND NT.FLAG_NOTIFICATION_CENTER = 'N'
+    AND NT.EVENT_TYPE IN ('shown','open','arrived')
+    AND CAST(NT.SENT_DATE AS DATE) >= '2026-01-01'
     AND (
-      NT.CAMPAIGN_NAME LIKE "%TC-AQS%"       OR NT.CAMPAIGN_NAME LIKE "%TCAQS%"
-      OR NT.CAMPAIGN_NAME LIKE "%TCADQ%"     OR NT.CAMPAIGN_NAME LIKE "%TCAQUI%"
-      OR NT.CAMPAIGN_NAME LIKE "%TC_AQS%"    OR NT.CAMPAIGN_NAME LIKE "%TCAQUISICAO%"
-      OR UPPER(NT.CAMPAIGN_NAME) LIKE "%FLOWS_COMMUNICATION_ELDO_FEV_ML_%"
-      OR NT.CAMPAIGN_NAME LIKE "%MLB_I_EG_NEW_TC_SOL_ENC%"
-      OR NT.CAMPAIGN_NAME LIKE "%MLB_I_EG_XSELLT1_T_TC_SOL_ENC%"
-      OR NT.CAMPAIGN_NAME LIKE "%MLB_I_EG_XSELLT1_T_TC_SOL_UP%"
-      OR NT.CAMPAIGN_NAME LIKE "%MLB_I_EG_XSELLT1_T_TC_SOL_ST%"
-      OR NT.CAMPAIGN_NAME LIKE "%NIA-CCARDACQ-D1%"   OR NT.CAMPAIGN_NAME LIKE "%CCARDACQ-D1-MIC%"
-      OR NT.CAMPAIGN_NAME LIKE "%CCARDACQ-D6-MIC%"   OR NT.CAMPAIGN_NAME LIKE "%CCARDACQ-D14-MIC%"
-      OR NT.CAMPAIGN_NAME LIKE "%CCARDACQ-BARRIDA%"  OR NT.CAMPAIGN_NAME LIKE "%CCARDACQ-UP1%"
-      OR NT.CAMPAIGN_NAME LIKE "%CCARDACQ-SIN-TC-ENR-ML%"
-      OR NT.CAMPAIGN_NAME LIKE "%PUSH-SOL-TC2%"      OR NT.CAMPAIGN_NAME LIKE "%CAR_REQ%ENC_TC%"
-      OR NT.CAMPAIGN_NAME LIKE "%NIA-CCARD-BARR%"    OR NT.CAMPAIGN_NAME LIKE "%POST-COMPRA-TC%"
-      OR NT.CAMPAIGN_NAME LIKE "%POST-PAGO-TC%"      OR NT.CAMPAIGN_NAME LIKE "%PUSH-TC-MELIPLUS%"
-      OR NT.CAMPAIGN_NAME LIKE "%UPSELL_TC%"
+      NT.CAMPAIGN_NAME LIKE '%TC-AQS%'       OR NT.CAMPAIGN_NAME LIKE '%TCAQS%'
+      OR NT.CAMPAIGN_NAME LIKE '%TCADQ%'     OR NT.CAMPAIGN_NAME LIKE '%TCAQUI%'
+      OR NT.CAMPAIGN_NAME LIKE '%TC_AQS%'    OR NT.CAMPAIGN_NAME LIKE '%TCAQUISICAO%'
+      OR UPPER(NT.CAMPAIGN_NAME) LIKE '%FLOWS_COMMUNICATION_ELDO_FEV_ML_%'
+      OR NT.CAMPAIGN_NAME LIKE '%MLB_I_EG_NEW_TC_SOL_ENC%'
+      OR NT.CAMPAIGN_NAME LIKE '%MLB_I_EG_XSELLT1_T_TC_SOL_ENC%'
+      OR NT.CAMPAIGN_NAME LIKE '%MLB_I_EG_XSELLT1_T_TC_SOL_UP%'
+      OR NT.CAMPAIGN_NAME LIKE '%MLB_I_EG_XSELLT1_T_TC_SOL_ST%'
+      OR NT.CAMPAIGN_NAME LIKE '%NIA-CCARDACQ-D1%'   OR NT.CAMPAIGN_NAME LIKE '%CCARDACQ-D1-MIC%'
+      OR NT.CAMPAIGN_NAME LIKE '%CCARDACQ-D6-MIC%'   OR NT.CAMPAIGN_NAME LIKE '%CCARDACQ-D14-MIC%'
+      OR NT.CAMPAIGN_NAME LIKE '%CCARDACQ-BARRIDA%'  OR NT.CAMPAIGN_NAME LIKE '%CCARDACQ-UP1%'
+      OR NT.CAMPAIGN_NAME LIKE '%CCARDACQ-SIN-TC-ENR-ML%'
+      OR NT.CAMPAIGN_NAME LIKE '%PUSH-SOL-TC2%'      OR NT.CAMPAIGN_NAME LIKE '%CAR_REQ%ENC_TC%'
+      OR NT.CAMPAIGN_NAME LIKE '%NIA-CCARD-BARR%'    OR NT.CAMPAIGN_NAME LIKE '%POST-COMPRA-TC%'
+      OR NT.CAMPAIGN_NAME LIKE '%POST-PAGO-TC%'      OR NT.CAMPAIGN_NAME LIKE '%PUSH-TC-MELIPLUS%'
+      OR NT.CAMPAIGN_NAME LIKE '%UPSELL_TC%'
     )
 ),
 per_prop AS (
   SELECT p.safra, p.flag_tc, p.grupo, p.flag_app_ativo, p.ea_mp,
-    COUNT(DISTINCT ct.CAMPAIGN_NAME || "|" || COALESCE(ct.APP, ""))              AS num_total,
-    COUNT(DISTINCT CASE WHEN ct.APP = "MERCADOPAGO" THEN ct.CAMPAIGN_NAME END)   AS num_mp,
-    COUNT(DISTINCT CASE WHEN ct.APP = "MERCADOLIBRE" THEN ct.CAMPAIGN_NAME END)  AS num_ml
+    COUNT(DISTINCT ct.CAMPAIGN_NAME || '|' || COALESCE(ct.APP, ''))              AS num_total,
+    COUNT(DISTINCT CASE WHEN ct.APP = 'MERCADOPAGO' THEN ct.CAMPAIGN_NAME END)   AS num_mp,
+    COUNT(DISTINCT CASE WHEN ct.APP = 'MERCADOLIBRE' THEN ct.CAMPAIGN_NAME END)  AS num_ml
   FROM proposals p
   LEFT JOIN communications ct
     ON p.CUS_CUST_ID = ct.CUS_CUST_ID
     AND (
-      (p.CCARD_PROP_STATUS = "pending"  AND CAST(ct.SENT_DATE AS DATE) BETWEEN p.data_encendido AND CURRENT_DATE()) OR
-      (p.CCARD_PROP_STATUS != "pending" AND CAST(ct.SENT_DATE AS DATE) BETWEEN p.data_encendido AND p.data_update)
+      (p.CCARD_PROP_STATUS = 'pending'  AND CAST(ct.SENT_DATE AS DATE) BETWEEN p.data_encendido AND CURRENT_DATE()) OR
+      (p.CCARD_PROP_STATUS != 'pending' AND CAST(ct.SENT_DATE AS DATE) BETWEEN p.data_encendido AND p.data_update)
     )
   GROUP BY p.safra, p.flag_tc, p.grupo, p.flag_app_ativo, p.ea_mp, p.CCARD_PROP_ID, p.CUS_CUST_ID
 )
@@ -97,23 +100,20 @@ MONTH_PT = {
 
 def run_query():
     print("Rodando query BigQuery...")
+    sql_flat = " ".join(QUERY.split())
     result = subprocess.run(
-        [
-            "bq", "query",
-            f"--project_id={BQ_PROJECT}",
-            "--use_legacy_sql=false",
-            "--format=csv",
-            "--max_rows=1000",
-            QUERY,
-        ],
-        capture_output=True,
-        text=True,
-        timeout=1800,
+        [BQ_CMD, "query",
+         f"--project_id={BQ_PROJECT}",
+         "--use_legacy_sql=false",
+         "--format=csv",
+         "--max_rows=1000",
+         sql_flat],
+        capture_output=True, text=True, timeout=1800,
     )
     if result.returncode != 0:
         raise RuntimeError(f"bq query falhou:\n{result.stderr}")
-    # remove linhas de status "Waiting on..."
-    lines = [l for l in result.stdout.splitlines() if not l.startswith("Waiting on")]
+    lines = [l for l in result.stdout.splitlines()
+             if not l.startswith("Waiting on") and not l.startswith("Current status")]
     return "\n".join(lines)
 
 

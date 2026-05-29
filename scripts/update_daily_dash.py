@@ -58,9 +58,6 @@ SHORT_NAMES = {
 def run_bq(sql):
     # Collapse to single line so Windows cmd.exe handles the argument correctly
     sql_flat = " ".join(sql.split())
-    kwargs = dict(capture_output=True, text=True, timeout=600, stdin=subprocess.DEVNULL)
-    if sys.platform == "win32":
-        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
     result = subprocess.run(
         [BQ_CMD, "query",
          f"--project_id={BQ_PROJECT}",
@@ -68,7 +65,7 @@ def run_bq(sql):
          "--format=csv",
          "--max_rows=500000",
          sql_flat],
-        **kwargs,
+        capture_output=True, text=True, timeout=600,
     )
     if result.returncode != 0:
         raise RuntimeError(f"bq query falhou (rc={result.returncode}):\nSTDOUT: {result.stdout[:500]}\nSTDERR: {result.stderr[:500]}")
