@@ -26,8 +26,13 @@ try {
     python scripts\update_daily_dash.py
     if ($LASTEXITCODE -ne 0) { throw "update_daily_dash.py falhou com codigo $LASTEXITCODE" }
 
-    # 3. Git commit e push se houve mudanca
-    git add dash_tc_comunicacoes.html daily.html
+    # 3. Atualiza uso.html
+    Write-Host "$(Get-Date -Format 'HH:mm:ss') Atualizando uso.html..."
+    python scripts\update_uso_dash.py
+    if ($LASTEXITCODE -ne 0) { throw "update_uso_dash.py falhou com codigo $LASTEXITCODE" }
+
+    # 4. Git commit e push se houve mudanca
+    git add dash_tc_comunicacoes.html daily.html uso.html
     git diff --staged --quiet
     if ($LASTEXITCODE -ne 0) {
         $msg = "Auto-update TC dashboard $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
